@@ -1,0 +1,7 @@
+<resources>
+    <string name="app_name">Forus</string>
+
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="participation_title">모임에 참여 하세요</string>
+    <string name="title_activity_maps">Map</string>
+</resources>
