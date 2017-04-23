@@ -24,7 +24,7 @@
             android:layout_alignParentBottom="true"
             android:layout_margin="10dp">
             <Button
-                android:text="Create"
+                android:text="모임생성"
                 android:layout_weight="1"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"

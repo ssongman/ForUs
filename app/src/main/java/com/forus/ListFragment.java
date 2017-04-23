@@ -13,8 +13,11 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.BaseAdapter;
 import android.widget.Button;
+import android.widget.ImageView;
 import android.widget.ListView;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.firebase.database.ChildEventListener;
@@ -24,6 +27,7 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.Query;
 import com.google.firebase.database.ValueEventListener;
+import com.squareup.picasso.Picasso;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -51,9 +55,9 @@ public class ListFragment extends Fragment {
 
     private OnFragmentInteractionListener mListener;
 
-    public ArrayList<String> arMeeting;
+    public ArrayList<Meeting> arMeetings;
     public ArrayList<String> arMeetingKey;
-    public ArrayAdapter<String> arAdapter;
+    public MeetingAdapter arAdapter;
     public ListView lvMeeting;
     private static final String TAG = "ForUs ListFragment";
     private DatabaseReference MeetingRef;
@@ -110,11 +114,10 @@ public class ListFragment extends Fragment {
             }
         });
 
-        arMeeting = new ArrayList<String>();
+        arMeetings = new ArrayList<Meeting>();
         arMeetingKey = new ArrayList<String>();
-        //arMeeting.add("김유신");
-        //arMeeting.add("이순신");
-        arAdapter = new ArrayAdapter<String> (getActivity(), android.R.layout.simple_list_item_multiple_choice, arMeeting);
+        arAdapter = new MeetingAdapter(getActivity(), R.layout.fragment_list_meeting, arMeetings);
+
         lvMeeting = (ListView) v.findViewById(R.id.lvMeeting);
         lvMeeting.setAdapter(arAdapter);
         lvMeeting.setChoiceMode(ListView.CHOICE_MODE_SINGLE);
@@ -129,18 +132,18 @@ public class ListFragment extends Fragment {
         //queryRef = MeetingRef.orderByChild("MtMembers").equalTo(AuthUid);
         //queryRef = MeetingRef.orderByChild("MtMembers").startAt(AuthUid).endAt(AuthUid);
         //queryRef = MeetingRef.child("MtMembers").child(AuthUid).orderByChild("PartYN").equalTo("Y");
-        queryRef = MeetingRef.limitToFirst(10);    // 일단 10개만 읽는다.  나중에 변경하자.
+//        queryRef = MeetingRef.limitToFirst(10);    // 일단 10개만 읽는다.  나중에 변경하자.
+        queryRef = MeetingRef;
 
-        queryRef.addValueEventListener(new ValueEventListener() {
+        queryRef.addValueEventListener(new ValueEventListener() {    // addValueEventListener,  addListenerForSingleValueEvent
             @Override
             public void onDataChange(DataSnapshot snapshot) {
-                arMeeting.clear();
+                arMeetings.clear();
                 arMeetingKey.clear();
                 for (DataSnapshot postSnapshot : snapshot.getChildren()) {
                     //Getting the data from snapshot
                     Meeting meeting = postSnapshot.getValue(Meeting.class);
-                    String meeting_name = meeting.getMtName();
-                    arMeeting.add(meeting_name);
+                    arMeetings.add(meeting);
                     arMeetingKey.add(postSnapshot.getKey());
                 }
                 arAdapter.notifyDataSetChanged();
@@ -155,13 +158,31 @@ public class ListFragment extends Fragment {
         return v;
     }
 
+    AdapterView.OnItemClickListener mItemClickListener = new AdapterView.OnItemClickListener() {
+        // Click : Detail fragment
+        public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+            Fragment fr = new DetailFragment();
+            Bundle args = new Bundle();
+            args.putString("param1", arMeetingKey.get(position) );
+            //args.putString("param2", arMeetings.get(position) );
+            fr.setArguments(args);
+
+            // Create new fragment and transaction
+            FragmentTransaction transaction = getActivity().getSupportFragmentManager().beginTransaction();
+            transaction.replace(R.id.fragment_container, fr);
+            transaction.addToBackStack(null);                  // and add the transaction to the back stack
+            transaction.commit();
+        }
+
+    };
+
     AdapterView.OnItemLongClickListener mItemLongClickListener = new AdapterView.OnItemLongClickListener() {
         // Long Click : 참여 fragment
         public boolean  onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
             Fragment fr = new PartFragment();
             Bundle args = new Bundle();
             args.putString("param1", arMeetingKey.get(position) );
-            args.putString("param2", arMeeting.get(position) );
+            //args.putString("param2", arMeetings.get(position) );
             fr.setArguments(args);
 
             // Create new fragment and transaction
@@ -172,24 +193,6 @@ public class ListFragment extends Fragment {
 
             return true;
         }
-    };
-
-    AdapterView.OnItemClickListener mItemClickListener = new AdapterView.OnItemClickListener() {
-        // Click : Detail fragment
-        public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-            Fragment fr = new DetailFragment();
-            Bundle args = new Bundle();
-            args.putString("param1", arMeetingKey.get(position) );
-            args.putString("param2", arMeeting.get(position) );
-            fr.setArguments(args);
-
-            // Create new fragment and transaction
-            FragmentTransaction transaction = getActivity().getSupportFragmentManager().beginTransaction();
-            transaction.replace(R.id.fragment_container, fr);
-            transaction.addToBackStack(null);                  // and add the transaction to the back stack
-            transaction.commit();
-        }
-
     };
 
     // TODO: Rename method, update argument and hook method into UI event
@@ -240,6 +243,64 @@ public class ListFragment extends Fragment {
         builder.setMessage(string);
         builder.setPositiveButton("확인", null);
         builder.show();
+    }
+
+
+    class MeetingAdapter extends BaseAdapter {
+        Context maincon;
+        LayoutInflater Inflater;
+        ArrayList<Meeting> arSrc;
+        int layout;
+
+        public MeetingAdapter(Context context, int alayout, ArrayList<Meeting> aarSrc) {
+            maincon = context;
+            Inflater = (LayoutInflater)context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+            arSrc = aarSrc;
+            layout = alayout;
+        }
+
+        public int getCount() {
+            return arSrc.size();
+        }
+
+        public Meeting getItem(int position) {
+            return arSrc.get(position);
+        }
+
+        public long getItemId(int position) {
+            return position;
+        }
+
+        public View getView(int position, View convertView, ViewGroup parent) {
+            final int pos = position;
+            if (convertView == null) {
+                convertView = Inflater.inflate(layout, parent, false);
+            }
+
+            TextView tvMtSN = (TextView) convertView.findViewById(R.id.tvMtSN);
+            TextView tvMtName = (TextView) convertView.findViewById(R.id.tvMtName);
+            TextView tvMtDateTime = (TextView) convertView.findViewById(R.id.tvMtDateTime);
+            TextView tvMtTOT = (TextView) convertView.findViewById(R.id.tvMtTOT);
+
+            try {
+                String MtName, MtDateTime;
+                MtName = arSrc.get(position).getMtName().toString();
+                MtDateTime = arSrc.get(position).getMtFrdt().toString() + " " + arSrc.get(position).getMtFrtm().toString();
+                Log.d(TAG, "position["+position+"], MtName[" + MtName + "], MtDateTime["+MtDateTime+"]");
+
+                tvMtSN.setText(String.valueOf(position + 1));
+                tvMtName.setText(MtName);
+                tvMtDateTime.setText(MtDateTime);
+                tvMtTOT.setText("0명");
+
+            } catch(Exception e) {
+                Log.d(TAG, "Exception: " + e.getMessage() );
+            }
+
+
+
+            return convertView;
+        }
     }
 
 }

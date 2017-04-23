@@ -8,17 +8,20 @@ public class MtMember {
     private String NickName      ;
     private String PartYN ;
     private String ParticipationDate;
+    private String AuthPhotoURL ;
     private double Latitude;
     private double Longitude;
 
     public MtMember() {
       /*Blank default constructor essential for Firebase*/
     }
-    public MtMember(String nickName, String partYN, String participationDate) {
+    public MtMember(String nickName, String partYN, String participationDate, String authPhotoURL) {
         NickName = nickName;
         PartYN = partYN;
         ParticipationDate = participationDate;
+        AuthPhotoURL = authPhotoURL;
     }
+
 
     public String getNickName() {
         return NickName;
@@ -32,6 +35,10 @@ public class MtMember {
         return ParticipationDate;
     }
 
+    public String getAuthPhotoURL() {
+        return AuthPhotoURL;
+    }
+
     public double getLatitude() {
         return Latitude;
     }
@@ -39,4 +46,5 @@ public class MtMember {
     public double getLongitude() {
         return Longitude;
     }
+
 }

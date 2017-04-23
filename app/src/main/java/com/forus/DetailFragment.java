@@ -3,18 +3,25 @@ package com.forus;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
+import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.Fragment;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AlertDialog;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ArrayAdapter;
+import android.widget.BaseAdapter;
 import android.widget.Button;
-import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.ListView;
+import android.widget.TextView;
+import android.widget.Toast;
 
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
@@ -22,6 +29,7 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.Query;
 import com.google.firebase.database.ValueEventListener;
+import com.squareup.picasso.Picasso;
 
 import java.util.ArrayList;
 
@@ -49,19 +57,30 @@ public class DetailFragment extends Fragment {
     private DatabaseReference MeetingRef;
     private Query queryRef;
 
-    public ArrayList<String> arMtMembers;
-    public ArrayList<String> arMtMemberKeys;
-    public ArrayAdapter<String> arAdapter;
-    public ListView lvMtMembers;
+    private ArrayList<MtMember> arMtMembers;
+    private ArrayList<String> arMtMemberKeys;
+//    private ArrayAdapter<String> arAdapter;
+    private MtMemberAdapter arAdapter;
+    private ListView lvMtMembers;
 
     // Class
-    MtMember mtMember  ;
-    String AuthUid     ;
+    private Meeting meeting;
+    private Member my_member  ;
+    private MtMember mtMember  ;
+    private String AuthUid     ;
 
-    EditText etMeetName;
-    EditText etMeetDate;
-    EditText etMeetTime;
-    EditText etMeetDesc;
+    private TextView tvMeetName;
+    private TextView tvMeetDateTime;
+    private TextView tvMeetDesc;
+
+    private Button btnLocaStart;
+    private Button btnLocaEnd  ;
+    private Button btnWatchMap ;
+    private Button btnMeetExit ;
+    private Button btnNotify   ;
+
+    private static final int REQUEST_PERMISSIONS = 100;
+    boolean boolean_permission;
 
 
     public DetailFragment() {
@@ -91,10 +110,11 @@ public class DetailFragment extends Fragment {
         super.onCreate(savedInstanceState);
         if (getArguments() != null) {
             MeetingKey = getArguments().getString(ARG_PARAM1);  // arMeetingKey
-            mParam2 = getArguments().getString(ARG_PARAM2);  // arMeeting
-            Log.d(TAG,"mParam1["+MeetingKey+"]  mParam2["+mParam2+"]");
+//            mParam2 = getArguments().getString(ARG_PARAM2);  // arMeeting
+//            Log.d(TAG,"mParam1["+MeetingKey+"]  mParam2["+mParam2+"]");
         }
         AuthUid = ((MainActivity)getActivity()).getAuthUid();
+        my_member = ((MainActivity)getActivity()).getMember();
     }
 
     @Override
@@ -107,24 +127,27 @@ public class DetailFragment extends Fragment {
         // Refresh Meeting from DB
         MeetingRef = FirebaseDatabase.getInstance().getReference().child("Meeting");
 
-        etMeetName    = (EditText) v.findViewById(R.id.etMeetName   );
-        etMeetDate    = (EditText) v.findViewById(R.id.etMeetDate   );
-        etMeetTime    = (EditText) v.findViewById(R.id.etMeetTime   );
-        etMeetDesc    = (EditText) v.findViewById(R.id.etMeetDesc   );
+        tvMeetName = (TextView) v.findViewById(R.id.tvMeetName   );
+        tvMeetDateTime = (TextView) v.findViewById(R.id.tvMeetDateTime   );
+        tvMeetDesc = (TextView) v.findViewById(R.id.tvMeetDesc   );
 
-        Button btnLocaStart = (Button) v.findViewById(R.id.btnLocaStart);
-        Button btnLocaEnd   = (Button) v.findViewById(R.id.btnLocaEnd  );
-        Button btnWatchMap  = (Button) v.findViewById(R.id.btnWatchMap );
-        Button btnMeetExit  = (Button) v.findViewById(R.id.btnMeetExit );
-        Button btnNotify    = (Button) v.findViewById(R.id.btnNotify   );
+        btnLocaStart = (Button) v.findViewById(R.id.btnLocaStart);
+        btnLocaEnd   = (Button) v.findViewById(R.id.btnLocaEnd  );
+        btnWatchMap  = (Button) v.findViewById(R.id.btnWatchMap );
+        btnMeetExit  = (Button) v.findViewById(R.id.btnMeetExit );
+        btnNotify    = (Button) v.findViewById(R.id.btnNotify   );
 
         btnLocaStart.setOnClickListener( new Button.OnClickListener() {
             public void onClick(View v) {
                 Log.d(TAG,"btnLocaStart");
-                Intent intent = new Intent(getActivity(), GPSService.class);
-                intent.putExtra("MeetingKey", MeetingKey);
-                intent.putExtra("AuthUid", AuthUid);
-                getActivity().startService(intent);
+                if (boolean_permission) {
+                    Intent intent = new Intent(getActivity(), GPSService.class);
+                    intent.putExtra("MeetingKey", MeetingKey);
+                    intent.putExtra("AuthUid", AuthUid);
+                    getActivity().startService(intent);
+                } else {
+                    Toast.makeText(getActivity(), "Please enable the gps", Toast.LENGTH_SHORT).show();
+                }
             }
         });
         btnLocaEnd.setOnClickListener( new Button.OnClickListener() {
@@ -157,6 +180,7 @@ public class DetailFragment extends Fragment {
                         @Override
                         public void onClick(DialogInterface dialogInterface, int i) {
                             MeetingRef.child(MeetingKey).child("MtMembers").child(AuthUid).child("PartYN").setValue( "N" );
+                            getActivity().getSupportFragmentManager().popBackStack();
                         }
                     })
                     .setNegativeButton("아니오", null)
@@ -166,7 +190,37 @@ public class DetailFragment extends Fragment {
         btnNotify.setOnClickListener( new Button.OnClickListener() {
             public void onClick(View v) {
                 // Log.d(TAG,"btnNotify");
-                // Notify
+
+//                FeedTemplate params = FeedTemplate
+//                        .newBuilder(ContentObject.newBuilder("디저트 사진",
+//                                "http://mud-kage.kakao.co.kr/dn/NTmhS/btqfEUdFAUf/FjKzkZsnoeE4o19klTOVI1/openlink_640x640s.jpg",
+//                                LinkObject.newBuilder().setWebUrl("https://dev.kakao.com")
+//                                        .setMobileWebUrl("https://dev.kakao.com").build())
+//                                .setDescrption("아메리카노, 빵, 케익")
+//                                .build())
+//                        .setSocial(SocialObject.newBuilder().setLikeCount(10).setCommentCount(20)
+//                                .setSharedCount(30).setViewCount(40).build())
+//                        .addButton(new ButtonObject("웹에서 보기", LinkObject.newBuilder().setWebUrl("'https://dev.kakao.com").setMobileWebUrl("'https://dev.kakao.com").build()))
+//                        .addButton(new ButtonObject("앱에서 보기", LinkObject.newBuilder()
+//                                .setWebUrl("'https://dev.kakao.com")
+//                                .setMobileWebUrl("'https://dev.kakao.com")
+//                                .setAndroidExecutionParams("key1=value1")
+//                                .setIosExecutionParams("key1=value1")
+//                                .build()))
+//                        .build();
+//
+//                KakaoLinkService.getInstance().sendDefault(this, params, new ResponseCallback<KakaoLinkResponse>() {
+//                    @Override
+//                    public void onFailure(ErrorResult errorResult) {
+//                        Logger.e(errorResult.toString());
+//                    }
+//
+//                    @Override
+//                    public void onSuccess(KakaoLinkResponse result) {
+//
+//                    }
+//                });
+
                 // update Notify_yn
                 MeetingRef.child(MeetingKey).child("MtNotify_yn").setValue("Y");
             }
@@ -174,15 +228,14 @@ public class DetailFragment extends Fragment {
 
         // 모임정보 가져오기
         queryRef = MeetingRef.child(MeetingKey);    // key
-        queryRef.addValueEventListener(new ValueEventListener() {
+        queryRef.addListenerForSingleValueEvent(new ValueEventListener() {    // addValueEventListener,  addListenerForSingleValueEvent
             @Override
             public void onDataChange(DataSnapshot snapshot) {
                 //Getting the data from snapshot
-                Meeting meeting = snapshot.getValue(Meeting.class);
-                etMeetName.setText(meeting.getMtName());
-                etMeetDate.setText(meeting.getMtFrdt());
-                etMeetTime.setText(meeting.getMtFrtm());
-                etMeetDesc.setText(meeting.getMtDesc());
+                meeting = snapshot.getValue(Meeting.class);
+                tvMeetName.setText(meeting.getMtName());
+                tvMeetDateTime.setText(meeting.getMtFrdt() + " " + meeting.getMtFrtm());
+                tvMeetDesc.setText(meeting.getMtDesc());
             }
 
             @Override
@@ -192,26 +245,24 @@ public class DetailFragment extends Fragment {
         });
 
         // 참여자 목록 가져오기
-        arMtMembers = new ArrayList<String>();
+        arMtMembers = new ArrayList<MtMember>();
         arMtMemberKeys = new ArrayList<String>();
-        //arMtMembers.add("김유신");
-        //arMtMembers.add("이순신");
-        arAdapter = new ArrayAdapter<String>(getActivity(), android.R.layout.simple_list_item_1, arMtMembers);
-//      arAdapter = new ArrayAdapter<String>(getActivity(), android.R.layout.simple_list_item_multiple_choice, arMtMembers);
+
+        arAdapter = new MtMemberAdapter(getActivity(), R.layout.fragment_detail_mtmember, arMtMembers);
         lvMtMembers = (ListView) v.findViewById(R.id.lvMtMembers);
         lvMtMembers.setAdapter(arAdapter);
-        //lvMtMembers.setChoiceMode(ListView.CHOICE_MODE_SINGLE);
 
         queryRef = MeetingRef.child(MeetingKey).child("MtMembers").orderByChild("PartYN").equalTo("Y");
         //queryRef = MeetingRef.limitToFirst(10);    // 일단 10개만 읽는다.
-        queryRef.addValueEventListener(new ValueEventListener() {
+        queryRef.addListenerForSingleValueEvent(new ValueEventListener() {    // addValueEventListener,  addListenerForSingleValueEvent
             @Override
             public void onDataChange(DataSnapshot snapshot) {
                 arMtMembers.clear();
+                arMtMemberKeys.clear();
                 for (DataSnapshot postSnapshot : snapshot.getChildren()) {
                     //Getting the data from snapshot
                     mtMember = postSnapshot.getValue(MtMember.class);
-                    arMtMembers.add(  mtMember.getNickName().toString()   );
+                    arMtMembers.add(mtMember);
                     arMtMemberKeys.add(postSnapshot.getKey());
                 }
                 arAdapter.notifyDataSetChanged();
@@ -223,8 +274,80 @@ public class DetailFragment extends Fragment {
             }
         });
 
+        // GPS permission
+        fn_permission();
+//        runtime_permissions();
+
         return v;
     }
+
+//    private void btnLocal_enable(boolean abutton_enable) {
+//        if (abutton_enable) {
+//            btnLocaStart.setEnabled(true);
+//            btnLocaEnd.setEnabled(true);
+//        } else {
+//            btnLocaStart.setEnabled(false);
+//            btnLocaEnd.setEnabled(false);
+//        }
+//    }
+
+    private void fn_permission() {
+        if ((ContextCompat.checkSelfPermission(getActivity(), android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED)) {
+            if ((ActivityCompat.shouldShowRequestPermissionRationale(getActivity(), android.Manifest.permission.ACCESS_FINE_LOCATION))) {
+                //
+            } else {
+                ActivityCompat.requestPermissions(getActivity(), new String[]{android.Manifest.permission.ACCESS_FINE_LOCATION }, REQUEST_PERMISSIONS);
+            }
+        } else {
+            boolean_permission = true;
+        }
+    }
+
+//    private boolean runtime_permissions() {
+//        Log.d(TAG, "[runtime_permissions] Build.VERSION.SDK_INT [" + Build.VERSION.SDK_INT + "],   ");
+//        Log.d(TAG, "[runtime_permissions] PackageManager.PERMISSION_GRANTED [" + PackageManager.PERMISSION_GRANTED + "],   ");
+//        Log.d(TAG, "[runtime_permissions] ContextCompat.checkSelfPermission(getActivity(), android.Manifest.permission.ACCESS_FINE_LOCATION) [" + ContextCompat.checkSelfPermission(getActivity(), android.Manifest.permission.ACCESS_FINE_LOCATION)  + "],   ");
+//        if (Build.VERSION.SDK_INT >= 21 &&
+//                ContextCompat.checkSelfPermission(getActivity(), android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
+//                ContextCompat.checkSelfPermission(getActivity(), android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+//
+//            requestPermissions(new String[]{android.Manifest.permission.ACCESS_FINE_LOCATION, android.Manifest.permission.ACCESS_COARSE_LOCATION},REQUEST_PERMISSIONS);
+//            btnLocal_enable(true);
+//            return true;
+//        }
+//        btnLocal_enable(false);
+//        return false;
+//    }
+
+//    @Override
+//    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+//        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+//
+//        if(requestCode == REQUEST_PERMISSIONS){
+//            if( grantResults[0] == PackageManager.PERMISSION_GRANTED && grantResults[1] == PackageManager.PERMISSION_GRANTED){
+//                btnLocal_enable(true);
+//            }else {
+//                Toast.makeText(getActivity(), "Please allow the permission", Toast.LENGTH_LONG).show();
+//                runtime_permissions();
+//            }
+//        }
+//    }
+
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        switch (requestCode) {
+            case REQUEST_PERMISSIONS: {
+                if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    boolean_permission = true;
+                } else {
+                    Toast.makeText(getActivity(), "Please allow the permission", Toast.LENGTH_LONG).show();
+                }
+            }
+        }
+    }
+
 
     // TODO: Rename method, update argument and hook method into UI event
     public void onButtonPressed(Uri uri) {
@@ -273,4 +396,84 @@ public class DetailFragment extends Fragment {
         builder.setPositiveButton("확인", null);
         builder.show();
     }
+
+
+    class MtMemberAdapter extends BaseAdapter {
+        Context maincon;
+        LayoutInflater Inflater;
+        ArrayList<MtMember> arSrc;
+        int layout;
+
+        public MtMemberAdapter(Context context, int alayout, ArrayList<MtMember> aarSrc) {
+            maincon = context;
+            Inflater = (LayoutInflater)context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+            arSrc = aarSrc;
+            layout = alayout;
+        }
+
+        public int getCount() {
+            return arSrc.size();
+        }
+
+        public MtMember getItem(int position) {
+            return arSrc.get(position);
+        }
+
+        public long getItemId(int position) {
+            return position;
+        }
+
+        public View getView(int position, View convertView, ViewGroup parent) {
+            final int pos = position;
+            if (convertView == null) {
+                convertView = Inflater.inflate(layout, parent, false);
+            }
+
+            ImageView ivProfile = (ImageView) convertView.findViewById(R.id.ivProfile);
+            TextView tvNickName = (TextView) convertView.findViewById(R.id.tvNickName);
+            TextView tvParticipationDate = (TextView) convertView.findViewById(R.id.tvParticipationDate);
+            TextView tvLeader = (TextView) convertView.findViewById(R.id.tvLeader);
+
+            try {
+                String AuthPhotoURL, NickName, ParticipationDate;
+                NickName = arSrc.get(position).getNickName().toString();
+                ParticipationDate = arSrc.get(position).getParticipationDate().toString();
+                Log.d(TAG, "position["+position+"],  NickName[" + NickName + "],  ParticipationDate["+ParticipationDate+"]");
+                if (arSrc.get(position).getAuthPhotoURL() != null ) {
+                    AuthPhotoURL = arSrc.get(position).getAuthPhotoURL().toString();
+
+                    Picasso.with(getActivity())
+                            .load(AuthPhotoURL)
+                            //.error(R.drawable.error)
+                            //.placeholder(R.drawable.placeholder)
+                            .resize(100, 100)
+                            .centerCrop()
+                            .into(ivProfile);
+                    Log.d(TAG, "AuthPhotoURL: " + AuthPhotoURL);
+                } else {
+//                    ivProfile.setImageResource("@mipmap/ic_launcher");
+                    ivProfile.setImageResource(android.R.drawable.ic_menu_more);
+                }
+
+                tvNickName.setText(NickName);
+                tvParticipationDate.setText("참여일시: " + ParticipationDate);
+                String mtLeader = meeting.getMtLeader().toString();
+                if (NickName.equals( mtLeader ) ) {
+                    tvLeader.setVisibility(View.VISIBLE);     // 모임장
+                } else {
+                    tvLeader.setVisibility(View.INVISIBLE);
+                }
+
+            } catch(Exception e) {
+                Log.d(TAG, "Exception: " + e.getMessage() );
+            }
+
+
+
+            return convertView;
+        }
+    }
+
+
+
 }

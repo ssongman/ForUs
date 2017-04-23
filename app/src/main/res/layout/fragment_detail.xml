@@ -1,4 +1,5 @@
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
@@ -10,107 +11,78 @@
         android:orientation="vertical"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_margin="20dp">
+        android:layout_margin="0dp" >
 
-        <TableLayout
+
+        <LinearLayout
+            android:orientation="vertical"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content">
+            android:layout_height="wrap_content"
+            android:weightSum="1">
 
-            <TableRow
+            <ImageView
                 android:layout_width="match_parent"
-                android:layout_height="match_parent" >
+                android:layout_height="94dp"
+                app:srcCompat="@drawable/img_outdoor"
+                android:id="@+id/imageView" />
 
-                <TextView
-                    android:text="Meet Name"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:id="@+id/textView3" />
-
-                <EditText
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:inputType="textPersonName"
-                    android:text="Meet Name"
-                    android:ems="10"
-                    android:id="@+id/etMeetName" />
-
-            </TableRow>
-
-            <TableRow
+            <TextView
+                android:text="모임정보"
                 android:layout_width="match_parent"
-                android:layout_height="match_parent" >
+                android:layout_height="wrap_content"
+                android:textSize="10sp"
+                android:background="?attr/colorButtonNormal" />
 
-                <TextView
-                    android:text="Meet Date"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:id="@+id/textView4"
-                    android:gravity="center" />
-
-                <LinearLayout
-                    android:orientation="horizontal"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content">
-
-                    <EditText
-                        android:layout_width="100dp"
-                        android:layout_height="wrap_content"
-                        android:inputType="textPersonName|date"
-                        android:text="20170315"
-                        android:ems="8"
-                        android:id="@+id/etMeetDate" />
-
-                    <EditText
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:inputType="textPersonName|time"
-                        android:text="1000"
-                        android:ems="4"
-                        android:id="@+id/etMeetTime" />
-                </LinearLayout>
-
-            </TableRow>
-
-            <TableRow
+            <TextView
+                android:text="헤이리라이딩 헤이리라이딩"
                 android:layout_width="match_parent"
-                android:layout_height="match_parent" >
-
-                <TextView
-                    android:text="Meet Desc"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:gravity="center" />
-
-                <EditText
-                    android:layout_width="match_parent"
-                    android:layout_height="100dp"
-                    android:inputType="textMultiLine|textPersonName"
-                    android:text="Description"
-                    android:ems="8"
-                    android:id="@+id/etMeetDesc" />
-
-            </TableRow>
-
-            <TableRow
+                android:layout_height="wrap_content"
+                android:textSize="20sp"
+                android:id="@+id/tvMeetName"
+                android:layout_marginLeft="10dp"
+                android:textColor="@android:color/black" />
+            <TextView
+                android:text="생성일시 : 201x.05.01 10:00"
                 android:layout_width="match_parent"
-                android:layout_height="match_parent" >
+                android:layout_height="wrap_content"
+                android:textSize="8sp"
+                android:id="@+id/tvMeetDateTime"
+                android:layout_marginLeft="10dp"
+                android:textColor="@android:color/black" />
 
-                <TextView
-                    android:text="Meet Member"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:gravity="center" />
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="?attr/colorButtonNormal"/>
 
-                <ListView
-                    android:layout_width="match_parent"
-                    android:layout_height="100dp"
-                    android:layout_alignParentTop="true"
-                    android:layout_alignParentStart="true"
-                    android:id="@+id/lvMtMembers" />
+            <TextView
+                android:text="모임설명"
+                android:layout_width="match_parent"
+                android:layout_height="38dp"
+                android:textSize="16sp"
+                android:id="@+id/tvMeetDesc"
+                android:layout_marginTop="10dp"
+                android:layout_marginBottom="10dp"
+                android:layout_marginLeft="10dp"
+                android:textColor="@android:color/black" />
 
-            </TableRow>
-        </TableLayout>
+            <TextView
+                android:text="모임멤버"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textSize="10sp"
+                android:background="?attr/colorButtonNormal" />
 
+            <ListView
+                android:layout_width="match_parent"
+                android:layout_height="200dp"
+                android:layout_span="2"
+                android:layout_alignParentTop="true"
+                android:layout_alignParentStart="true"
+                android:id="@+id/lvMtMembers"
+                android:layout_weight="2.50" />
+
+        </LinearLayout>
 
         <LinearLayout
             android:orientation="vertical"
@@ -118,20 +90,19 @@
             android:layout_height="wrap_content"
             android:layout_alignParentBottom="true">
 
-
             <LinearLayout
                 android:orientation="horizontal"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content">
                 <Button
-                    android:text="Location Start"
+                    android:text="위치공유시작"
                     android:layout_width="wrap_content"
                     android:layout_height="50dp"
                     android:layout_weight="1"
                     android:onClick="mOnClick"
                     android:id="@+id/btnLocaStart" />
                 <Button
-                    android:text="Location End"
+                    android:text="위치공유종료"
                     android:layout_width="wrap_content"
                     android:layout_height="50dp"
                     android:layout_weight="1"
@@ -144,32 +115,26 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content" >
                 <Button
-                    android:text="Watch Map"
-                    android:layout_width="wrap_content"
+                    android:layout_width="198dp"
                     android:layout_height="50dp"
-                    android:layout_weight="1"
+                    android:text="지도보기"
                     android:onClick="mOnClick"
                     android:id="@+id/btnWatchMap" />
                 <Button
-                    android:text="Meet Exit"
-                    android:layout_width="wrap_content"
+                    android:layout_width="66dp"
                     android:layout_height="50dp"
-                    android:layout_weight="1"
                     android:onClick="mOnClick"
-                    android:id="@+id/btnMeetExit" />
-            </LinearLayout>
+                    android:id="@+id/btnNotify"
+                    android:background="@drawable/img_kakao2"
+                    android:layout_marginLeft="10dp" />
 
-            <LinearLayout
-                android:orientation="horizontal"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content" >
                 <Button
-                    android:text="Notify For KAKAO"
-                    android:layout_width="wrap_content"
+                    android:layout_width="52dp"
                     android:layout_height="50dp"
-                    android:layout_weight="1"
                     android:onClick="mOnClick"
-                    android:id="@+id/btnNotify" />
+                    android:id="@+id/btnMeetExit"
+                    android:background="@drawable/img_exit_icon"
+                    android:layout_marginLeft="10dp" />
             </LinearLayout>
 
         </LinearLayout>

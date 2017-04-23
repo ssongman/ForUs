@@ -11,6 +11,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.firebase.database.DataSnapshot;
@@ -60,11 +61,12 @@ public class PartFragment extends Fragment  {
 
     String MeetingKey;
 
-    EditText etMeetName;
-    EditText etMeetDate;
-    EditText etMeetTime;
-    EditText etMeetDesc;
+    TextView tvMeetName;
+    TextView tvMeetDate;
+    TextView tvMeetTime;
+    TextView tvMeetDesc;
     EditText etMeetPass;
+
 
     public PartFragment() {
         // Required empty public constructor
@@ -97,7 +99,7 @@ public class PartFragment extends Fragment  {
             Log.d(TAG,"MeetingKey["+MeetingKey+"]  ");
         }
         AuthUid = ((MainActivity)getActivity()).getAuthUid();
-        Log.d(TAG,"[onCreate] AuthUid["+AuthUid+"]  ");
+        member = ((MainActivity)getActivity()).getMember();
     }
 
     @Override
@@ -110,10 +112,10 @@ public class PartFragment extends Fragment  {
         MeetingRef = FirebaseDatabase.getInstance().getReference().child("Meeting");
         MembersRef = FirebaseDatabase.getInstance().getReference().child("Members");
 
-        etMeetName    = (EditText) v.findViewById(R.id.etMeetName   );
-        etMeetDate    = (EditText) v.findViewById(R.id.etMeetDate   );
-        etMeetTime    = (EditText) v.findViewById(R.id.etMeetTime   );
-        etMeetDesc    = (EditText) v.findViewById(R.id.etMeetDesc   );
+        tvMeetName    = (TextView) v.findViewById(R.id.tvMeetName   );
+        tvMeetDate    = (TextView) v.findViewById(R.id.tvMeetDate   );
+        tvMeetTime    = (TextView) v.findViewById(R.id.tvMeetTime   );
+        tvMeetDesc    = (TextView) v.findViewById(R.id.tvMeetDesc   );
         etMeetPass    = (EditText) v.findViewById(R.id.etMeetPass   );
 
         Button btnParticipation = (Button) v.findViewById(R.id.btnParticipation);
@@ -128,30 +130,31 @@ public class PartFragment extends Fragment  {
                 if ( MeetPass.equals(MtPass) ) {
 
                     // 1. NickName
-                    if (member.getNickName().toString().equals("") ) {
-                        MeetingRef.child(MeetingKey).child("MtMembers").child(AuthUid).child("NickName").setValue( member.getDisplayName().toString() ); // NickName 이 없으면 DisplayName 으로 한다.
-                    } else {
-                        MeetingRef.child(MeetingKey).child("MtMembers").child(AuthUid).child("NickName").setValue( member.getNickName().toString() );   // NickName
-                    }
+                    MeetingRef.child(MeetingKey).child("MtMembers").child(AuthUid).child("NickName").setValue( member.getNickName() );   // NickName
 
                     // 2. PartYN
                     MeetingRef.child(MeetingKey).child("MtMembers").child(AuthUid).child("PartYN").setValue( "Y" );
 
-                    // 2. 참여수락 일자
+                    // 3. 참여수락 일자
                     SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
                     String today = sdf.format(new Date());
                     MeetingRef.child(MeetingKey).child("MtMembers").child(AuthUid).child("ParticipationDate").setValue( today );
+
+                    // 4. 사진URL
+                    MeetingRef.child(MeetingKey).child("MtMembers").child(AuthUid).child("AuthPhotoURL").setValue( member.getAuthPhotoURL() );
+                    // "https://lh4.googleusercontent.com/-6AAwrT0qFEM/AAAAAAAAAAI/AAAAAAAAAMQ/LG3Sb6MbquE/s96-c/photo.jpg"
 
                     Toast.makeText(getActivity(), "모임에 참여하였습니다.", Toast.LENGTH_SHORT).show();
                 } else {
                     Toast.makeText(getActivity(), "패스워드가 일치하지 않습니다.", Toast.LENGTH_SHORT).show();
                 }
-
+                getActivity().getSupportFragmentManager().popBackStack();
             }
         });
         btnCancel.setOnClickListener( new Button.OnClickListener() {
             public void onClick(View v) {
                 Log.d(TAG,"btnCancel");
+                getActivity().getSupportFragmentManager().popBackStack();
             }
         });
 
@@ -162,10 +165,10 @@ public class PartFragment extends Fragment  {
             public void onDataChange(DataSnapshot snapshot) {
                 //Getting the data from snapshot
                 meeting = snapshot.getValue(Meeting.class);
-                etMeetName.setText(meeting.getMtName());
-                etMeetDate.setText(meeting.getMtFrdt());
-                etMeetTime.setText(meeting.getMtFrtm());
-                etMeetDesc.setText(meeting.getMtDesc());
+                tvMeetName.setText(meeting.getMtName());
+                tvMeetDate.setText(meeting.getMtFrdt());
+                tvMeetTime.setText(meeting.getMtFrtm());
+                tvMeetDesc.setText(meeting.getMtDesc());
             }
 
             @Override
@@ -174,23 +177,23 @@ public class PartFragment extends Fragment  {
             }
         });
 
-        // 개인정보 가져오기
-        queryRef = MembersRef.child(AuthUid);    // key
-        queryRef.addValueEventListener(new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot snapshot) {
-                //Getting the data from snapshot
-                member = snapshot.getValue(Member.class);
-//                AuthEmail       = member.getEmail      ();
-//                AuthDisplayName = member.getDisplayName();
-//                AuthNickName    = member.getNickName   ();
-            }
-
-            @Override
-            public void onCancelled(DatabaseError databaseError) {
-                Log.w(TAG, "Failed to read value.", databaseError.toException());
-            }
-        });
+//        // 멤버정보 가져오기
+//        queryRef = MembersRef.child(AuthUid);    // key
+//        queryRef.addValueEventListener(new ValueEventListener() {
+//            @Override
+//            public void onDataChange(DataSnapshot snapshot) {
+//                //Getting the data from snapshot
+//                member = snapshot.getValue(Member.class);
+////                AuthEmail       = member.getEmail      ();
+////                AuthDisplayName = member.getDisplayName();
+////                AuthNickName    = member.getNickName   ();
+//            }
+//
+//            @Override
+//            public void onCancelled(DatabaseError databaseError) {
+//                Log.w(TAG, "Failed to read value.", databaseError.toException());
+//            }
+//        });
 
 
 

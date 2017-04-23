@@ -10,6 +10,7 @@ public class Meeting {
     private String MtFrdt;
     private String MtFrtm;
     private String MtDesc;
+    private String MtLeader;
     private String MtNotify_yn;
 
     public Meeting() {
@@ -47,5 +48,9 @@ public class Meeting {
 
     public String getMtNotify_yn() {
         return MtNotify_yn;
+    }
+
+    public String getMtLeader() {
+        return MtLeader;
     }
 }

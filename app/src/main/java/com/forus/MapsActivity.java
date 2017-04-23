@@ -65,6 +65,9 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     private PowerManager.WakeLock mWakeLock;
     private boolean mbAlwaysBright = false;
 
+    private ArrayList<MtMember> arMtMembers;
+    private ArrayList<String> arMtMemberKeys;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -182,47 +185,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         mMap = googleMap;
         // Set a preference for minimum and maximum zoom.
 //        mMap.setMinZoomPreference(6.0f);
-//        mMap.setMaxZoomPreference(16.0f);
-
-//        // Add a marker in Sydney and move the camera
-//        LatLng sydney = new LatLng(-34, 151);
-//        mMap.addMarker(new MarkerOptions().position(sydney).title("Marker in Sydney"));
-//        mMap.moveCamera(CameraUpdateFactory.newLatLng(sydney));
-
-//        arMarkers = new ArrayList<Marker>();
-//
-//        // inside your loop:
-//        Marker marker = mMap.addMarker(new MarkerOptions().position(new LatLng(geo1Dub,geo2Dub))); //...
-
-//        // Add a marker and move the camera
-//        LatLng LatLng1 = new LatLng(37.519576, 126.940245);
-//        LatLng LatLng2 = new LatLng(37.519500, 126.940200);
-//
-//        for (int i = 0; i < 2 ; i++) {
-//            Marker marker;
-//
-//            if (i == 0) {
-//                 marker = mMap.addMarker(new MarkerOptions()
-//                    .position(new LatLng(37.519576, 126.940245))
-//                    .title("Marker in 63 building")
-//                    .snippet("This is 63 building")
-//                    .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE)));
-//                marker.setVisible(true);
-//                mMarkerArray.add(marker);
-//            } else if (i == 1) {
-//                marker = mMap.addMarker(new MarkerOptions()
-//                    .position(new LatLng(37.519500, 126.940200))
-//                    .title("Marker in another")
-//                    .snippet("This is another")
-//                    .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE)));
-//                marker.setVisible(true);
-//                mMarkerArray.add(marker);
-//            }
-//        }
-//        mMap.setMapType(GoogleMap.MAP_TYPE_NORMAL);      // MAP_TYPE_NORMAL, MAP_TYPE_HYBRID
-//        mMap.getUiSettings().setZoomControlsEnabled(true);
-//        mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(37.519576, 126.940245), 16));
-
+        mMap.setMaxZoomPreference(18.0f);
 
         // 위치정보 가져오기 from DB
         MeetingRef = FirebaseDatabase.getInstance().getReference().child("Meeting");
@@ -249,9 +212,13 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 mMap.clear();
                 LatLngBounds.Builder b = new LatLngBounds.Builder();
 
+                arMtMembers = new ArrayList<MtMember>();
+                arMtMemberKeys = new ArrayList<String>();
                 for (DataSnapshot postSnapshot : snapshot.getChildren()) {
                     //Getting the data from snapshot
                     mtMember = postSnapshot.getValue(MtMember.class);
+                    arMtMembers.add(mtMember);
+                    arMtMemberKeys.add(postSnapshot.getKey());
 
                     mAuthUid = postSnapshot.getKey();
                     mlatitude  = mtMember.getLatitude();   // 위도
@@ -282,8 +249,11 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 mMap.setMapType(GoogleMap.MAP_TYPE_NORMAL);
                 mMap.getUiSettings().setZoomControlsEnabled(true);
 
-                LatLngBounds bounds = b.build();
-                mMap.animateCamera(CameraUpdateFactory.newLatLngBounds(bounds, 200 ));  // padding : 200
+                if ( mcnt > 0 ) {
+                    // build the LatLngBounds object
+                    LatLngBounds bounds = b.build();
+                    mMap.animateCamera(CameraUpdateFactory.newLatLngBounds(bounds, 200));  // padding : 200
+                }
 
 //                // 위경도의 평균치를 구해서 화면을 이동.
 //                mlatitude_new = average(mlatitude_list);
@@ -298,8 +268,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 Log.w(TAG, "Failed to read value.", databaseError.toException());
             }
         });
-
-
 
 
         //mMap.setMapType(GoogleMap.MAP_TYPE_NORMAL);

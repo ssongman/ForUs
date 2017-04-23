@@ -1,6 +1,7 @@
 apply plugin: 'com.android.application'
 
 android {
+    compileOptions.encoding = "UTF-8"
     compileSdkVersion 25
     buildToolsVersion "25.0.0"
     defaultConfig {

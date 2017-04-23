@@ -1,9 +1,6 @@
 package com.forus;
 
 import android.content.Intent;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v4.app.Fragment;
@@ -13,7 +10,6 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
-import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
 
@@ -41,12 +37,9 @@ import com.google.firebase.database.Query;
 import com.google.firebase.database.ValueEventListener;
 import com.squareup.picasso.Picasso;
 
-import java.net.URL;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
-import static com.forus.R.drawable.common_google_signin_btn_icon_dark;
-import static com.forus.R.id.imageView;
 
 public class AuthFragment extends Fragment implements GoogleApiClient.OnConnectionFailedListener, View.OnClickListener {
     SignInButton btnSignIn;
@@ -62,15 +55,15 @@ public class AuthFragment extends Fragment implements GoogleApiClient.OnConnecti
     private static final int RC_SIGN_IN = 9001;
 
     private FirebaseAuth mAuth;
-    private FirebaseAuth.AuthStateListener mAuthListener;
-    private DatabaseReference MeetingRef;
     private DatabaseReference MembersRef;
     private Query queryRef;
     private String AuthUid;
+    private String AuthDisplayName;
+    private String AuthEmail;
+    private String AuthPhotoURL;
 
-    private EditText etPhotoURL ;
-    private Button btnGetPhotoURL ;
     private ImageView ivPhotoURL;
+    private boolean firstSignIn=false;
 
     public AuthFragment() {
         // Required empty public constructor
@@ -84,8 +77,8 @@ public class AuthFragment extends Fragment implements GoogleApiClient.OnConnecti
     @Override
     public void onStart() {
         super.onStart();
-        FirebaseAuth.getInstance().addAuthStateListener(mAuthListener);
     }
+
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -118,39 +111,87 @@ public class AuthFragment extends Fragment implements GoogleApiClient.OnConnecti
         btnSignOut.setOnClickListener(this);
         btnProfile.setOnClickListener(this);
 
+        // Auth
         mAuth = FirebaseAuth.getInstance();
-        mAuthListener = new FirebaseAuth.AuthStateListener() {
-            @Override
-            public void onAuthStateChanged(@NonNull FirebaseAuth firebaseAuth) {
-                FirebaseUser user = firebaseAuth.getCurrentUser();
-                if (user != null) {
-                    // User is signed in
-                    Log.d(TAG, "onAuthStateChanged signed_in:" + user.getUid());
-                    Log.d(TAG, "onAuthStateChanged getDisplayName:" + user.getDisplayName());
-                    Log.d(TAG, "onAuthStateChanged getEmail:" + user.getEmail());
-                    Log.d(TAG, "onAuthStateChanged getId:" + user.getProviders());
+        mAuth.addAuthStateListener(new FirebaseAuth.AuthStateListener() {
+                @Override
+                public void onAuthStateChanged(@NonNull FirebaseAuth firebaseAuth) {
+                    FirebaseUser user = firebaseAuth.getCurrentUser();
+                    if (user != null) {
+                        // User is signed in
+                        Log.d(TAG, "it is authenticate [SIgn IN]");
+                        Log.d(TAG, "onAuthStateChanged getUid:" + user.getUid());
+                        Log.d(TAG, "onAuthStateChanged getDisplayName:" + user.getDisplayName());
+                        Log.d(TAG, "onAuthStateChanged getEmail:" + user.getEmail());
+                        Log.d(TAG, "onAuthStateChanged getProviders:" + user.getProviders());
+                        Log.d(TAG, "onAuthStateChanged getPhotoUrl:" + user.getPhotoUrl().toString());
 
-                    // User's Photo
-                    Picasso.with(getActivity())
-                            .load( user.getPhotoUrl().toString() )
-                            //.error(R.drawable.error)
-                            //.placeholder(R.drawable.placeholder)
-                            .resize(100, 100)
-                            .centerCrop()
-                            .into(ivPhotoURL);
+                        AuthUid = user.getUid();
+                        AuthDisplayName = user.getDisplayName();
+                        AuthEmail = user.getEmail();
+                        AuthPhotoURL = user.getPhotoUrl().toString();
 
-                    updateUI(true);
-                } else {
-                    // User is signed out
-                    Log.d(TAG, "onAuthStateChanged signed_out");
-                    ivPhotoURL.setImageResource(android.R.drawable.ic_menu_more);
-                    updateUI(false);
+                        tvStatus.setText("Status: Sign In");
+                        tvDisplayName.setText("DisplayName: " + AuthDisplayName);
+                        tvEmail.setText("Email: " + AuthEmail);
+                        tvUid.setText("Uid: " + AuthUid    );
+
+                        // User's Photo
+                        Picasso.with(getActivity())
+                                .load( AuthPhotoURL )
+                                //.error(R.drawable.error)
+                                //.placeholder(R.drawable.placeholder)
+                                .resize(100, 100)
+                                .centerCrop()
+                                .into(ivPhotoURL);
+
+                        // Sign UP 이후 첫 설정값
+                        MembersRef = FirebaseDatabase.getInstance().getReference().child("Members");
+                        queryRef = MembersRef.child(AuthUid);    // key
+                        queryRef.addValueEventListener(new ValueEventListener() {
+                            @Override
+                            public void onDataChange(DataSnapshot snapshot) {
+                                if (snapshot.exists()) {
+                                    // TODO: handle the case where the data already exists
+                                }
+                                else {
+                                    // TODO: handle the case where the data does not yet exist
+                                    if (firstSignIn) {
+                                        Log.d(TAG, "Sign IN 이후 첫 설정, UID 조회후 없을때 설정함. AuthUid[" + AuthUid + "] ");
+                                        MembersRef.child(AuthUid).child("DisplayName").setValue(AuthDisplayName); // 1. DisplayName
+                                        MembersRef.child(AuthUid).child("Email").setValue(AuthEmail);             // 2. Email
+                                        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+                                        String today = sdf.format(new Date());
+                                        MembersRef.child(AuthUid).child("CreateDate").setValue(today);            // 3. CreateDate
+                                        MembersRef.child(AuthUid).child("AuthPhotoURL").setValue(AuthPhotoURL);   // 4. PhotoUrl
+                                        MembersRef.child(AuthUid).child("NickName").setValue(AuthDisplayName);    // 5. NIckName 이 없으면 DisplayName 으로 지정해 준다.
+                                    }
+                                }
+                            }
+
+                            @Override
+                            public void onCancelled(DatabaseError databaseError) {
+                                Log.w(TAG, "Failed to read value.", databaseError.toException());
+                            }
+                        });
+
+                        updateUI(true);
+                    } else {
+                        // User is signed out
+                        Log.d(TAG, "it is not authenticate...");
+
+                        tvStatus.setText("Status:");
+                        tvDisplayName.setText("DisplayName: ");
+                        tvEmail.setText("Email: ");
+                        tvUid.setText("Uid: ");
+
+                        ivPhotoURL.setImageResource(android.R.drawable.ic_menu_more);
+                        updateUI(false);
+                    }
                 }
             }
-        };
+        );
 
-        // program start
-        //signIn();
 
         // Inflate the layout for this fragment
         return v;
@@ -160,7 +201,6 @@ public class AuthFragment extends Fragment implements GoogleApiClient.OnConnecti
     public void onActivityCreated(Bundle savedInstanceState) {
         // TODO Auto-generated method stub
         super.onActivityCreated(savedInstanceState);
-
     }
 
     @Override
@@ -204,6 +244,8 @@ public class AuthFragment extends Fragment implements GoogleApiClient.OnConnecti
             Log.d(TAG, "onActivityResult result.isSuccess : " + result.isSuccess());
             Log.d(TAG, "resultCode["+resultCode+"]");
             if (result.isSuccess()) {
+                Log.d(TAG, "firstSignIn = true 설정 ");
+                firstSignIn = true;
                 // Google Sign In was successful, authenticate with Firebase
                 GoogleSignInAccount account = result.getSignInAccount();
                 handleSignInResult(account);
@@ -231,6 +273,9 @@ public class AuthFragment extends Fragment implements GoogleApiClient.OnConnecti
             public void onResult(@NonNull Status status) {
                 //tvStatus.setText("Sign Out");
                 updateUI(false);
+//                // 멤버 삭제  -- 삭제하지 말자.
+//                MembersRef = FirebaseDatabase.getInstance().getReference().child("Members");
+//                MembersRef.child(AuthUid).removeValue();
             }
         });
     }
@@ -247,56 +292,12 @@ public class AuthFragment extends Fragment implements GoogleApiClient.OnConnecti
         }
     }
 
-
     private void handleSignInResult(GoogleSignInAccount acct) {
-        AuthUid = acct.getId();
-        ((MainActivity)getActivity()).setAuthUid(AuthUid);
-        Log.d(TAG, "handleSignInResult getDisplayName:" + acct.getDisplayName());
-        Log.d(TAG, "handleSignInResult getEmail:" + acct.getEmail());
-        Log.d(TAG, "handleSignInResult getId:" + acct.getId());
-        Log.d(TAG, "handleSignInResult getAccount:" + acct.getAccount());
-        Log.d(TAG, "handleSignInResult getServerAuthCode:" + acct.getServerAuthCode());
+        Log.d(TAG, "handleSignInResult acct.getId:" + acct.getId());
+        Log.d(TAG, "handleSignInResult acct.getDisplayName:" + acct.getDisplayName());
+        Log.d(TAG, "handleSignInResult acct.getEmail:" + acct.getEmail());
 
-        tvStatus.setText("[updateUI] Sign In");
-        tvDisplayName.setText("DisplayName: " + acct.getDisplayName());
-        tvEmail.setText("eMail: " + acct.getEmail());
-        tvUid.setText("Uid: " + acct.getId());
-
-        // DB update
-        // Refresh Meeting from DB
-        MeetingRef = FirebaseDatabase.getInstance().getReference().child("Members");
-        MeetingRef.child(AuthUid).child("Email").setValue(acct.getEmail());
-        MeetingRef.child(AuthUid).child("DisplayName").setValue(acct.getDisplayName());
-        MeetingRef.child(AuthUid).child("ServerAuthCode:").setValue(acct.getServerAuthCode());
-
-        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-        String today = sdf.format(new Date());
-        MeetingRef.child(acct.getId()).child("CreateDate").setValue( today );
-
-
-        // 멤버정보 가져오기 from DB - NickName
-        MembersRef = FirebaseDatabase.getInstance().getReference().child("Members");
-        Log.d(TAG, "AuthUid["+AuthUid+"]");
-        queryRef = MembersRef.child(AuthUid);    // key
-        queryRef.addValueEventListener(new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot snapshot) {
-                //Getting the data from snapshot
-                Member member = snapshot.getValue(Member.class);   // 개인정보를 member class 에 담는다.
-                // member.getUid()
-                // member.getEmail()
-                // member.getDisplayName()
-                // member.getNickName()
-//                ((MainActivity)getActivity()).setAuthNickName( member.getNickName().toString() );
-                ((MainActivity)getActivity()).setMember( member );
-            }
-
-            @Override
-            public void onCancelled(DatabaseError databaseError) {
-                Log.w(TAG, "Failed to read value.", databaseError.toException());
-            }
-        });
-
+        // 사용자 재인증하기 리스너 설정
         AuthCredential credential = GoogleAuthProvider.getCredential(acct.getIdToken(), null);
         mAuth.signInWithCredential(credential)
                 .addOnCompleteListener(getActivity(), new OnCompleteListener<AuthResult>() {

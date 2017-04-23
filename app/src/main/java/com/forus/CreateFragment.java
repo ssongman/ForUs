@@ -52,8 +52,10 @@ public class CreateFragment extends Fragment {
     private EditText etMtFrtm;
     private EditText etMtDesc;
 
-    public String AuthUid;
-    public String AuthNickName;
+    // Class declear
+    private Member my_member  ;
+    private String AuthUid;
+    private String AuthNickName;
     
 
     public CreateFragment() {
@@ -87,6 +89,7 @@ public class CreateFragment extends Fragment {
         }
         AuthUid = ((MainActivity)getActivity()).getAuthUid();
         AuthNickName = ((MainActivity)getActivity()).getAuthNickName();
+        my_member = ((MainActivity)getActivity()).getMember();
     }
 
     @Override
@@ -123,6 +126,7 @@ public class CreateFragment extends Fragment {
                 map2.put("MtFrdt",etMtFrdt.getText().toString());
                 map2.put("MtFrtm",etMtFrtm.getText().toString());
                 map2.put("MtDesc",etMtDesc.getText().toString());
+                map2.put("MtLeader",AuthNickName);
                 meetingRefKey.updateChildren(map2);
 
                 // 참여멤버, 모임장은 자동참여
@@ -131,18 +135,16 @@ public class CreateFragment extends Fragment {
                 SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
                 String today = sdf.format(new Date());
                 meetingRefKey.child("MtMembers").child(AuthUid).child("ParticipationDate").setValue( today ); // 3. 참여수락 일자
-
+                meetingRefKey.child("MtMembers").child(AuthUid).child("ParticipationDate").setValue( my_member.getAuthPhotoURL() ); // 4. PhotoURL
 
                 Log.d(TAG,"After DB insert ");
-                getActivity().getSupportFragmentManager().beginTransaction().
-                        replace(R.id.fragment_container, new ListFragment()).commit();
+                getActivity().getSupportFragmentManager().popBackStack();
             }
         });
         btnCancel.setOnClickListener( new Button.OnClickListener() {
             public void onClick(View v) {
                 Log.d(TAG,"Before Test1 ");
-                getActivity().getSupportFragmentManager().beginTransaction().
-                        replace(R.id.fragment_container, new ListFragment()).commit();
+                getActivity().getSupportFragmentManager().popBackStack();
             }
         });
 

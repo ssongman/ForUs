@@ -1,6 +1,5 @@
 package com.forus;
 
-import android.*;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
@@ -12,15 +11,11 @@ import android.location.LocationManager;
 import android.location.LocationProvider;
 import android.os.Build;
 import android.os.Bundle;
-import android.os.Handler;
 import android.os.IBinder;
-import android.os.Message;
 import android.provider.Settings;
-import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
 import android.util.Log;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.firebase.database.DatabaseReference;
@@ -29,17 +24,12 @@ import com.google.firebase.database.FirebaseDatabase;
 public class GPSService extends Service {
     private final String TAG="ForUs GPSService";
     public LocationManager mLocMan;
-    Location mlocation;
     String mProvider;
 
     int    mCount = 0;
     double mLatitude = 0.0;
     double mLongitude = 0.0;
     double mAltitude = 0.0;
-
-    private static final int MY_PERMISSION_REQUEST_FINE_LOCATION = 101;
-    private static final int MY_PERMISSION_REQUEST_COARSE_LOCATION = 102;
-    private boolean permissionIsGranted = false;
 
     boolean mQuit;
     String AuthUid     ;
@@ -50,10 +40,16 @@ public class GPSService extends Service {
     public GPSService() {
     }
 
+
+    @Nullable
+    @Override
+    public IBinder onBind(Intent intent) {
+        return null;
+    }
+
     @Override
     public void onCreate() {
         super.onCreate();
-
         mLocMan = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
         mProvider = mLocMan.getBestProvider(new Criteria(), true);
     }
@@ -63,12 +59,12 @@ public class GPSService extends Service {
     public void onDestroy() {
         super.onDestroy();
 
-        Toast.makeText(this, "Service End", Toast.LENGTH_SHORT).show();
+        Toast.makeText(this, "위치공유 서비스 종료", Toast.LENGTH_SHORT).show();
         mQuit=true;
 
-        if ( //Build.VERSION.SDK_INT >= 23 &&
+        if ( // Build.VERSION.SDK_INT >= 23 &&
                 ActivityCompat.checkSelfPermission( this, android.Manifest.permission.ACCESS_FINE_LOCATION ) != PackageManager.PERMISSION_GRANTED &&
-                        ActivityCompat.checkSelfPermission( this, android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                ActivityCompat.checkSelfPermission( this, android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             Log.d(TAG, "현재상태: Location 사용불가");
             return  ;
         }
@@ -84,33 +80,27 @@ public class GPSService extends Service {
         MeetingKey = intent.getStringExtra("MeetingKey");
         AuthUid = intent.getStringExtra("AuthUid");
 
-        if ( //Build.VERSION.SDK_INT >= 23 &&
+        if ( // Build.VERSION.SDK_INT >= 23 &&
                 ActivityCompat.checkSelfPermission( this, android.Manifest.permission.ACCESS_FINE_LOCATION ) != PackageManager.PERMISSION_GRANTED &&
-                        ActivityCompat.checkSelfPermission( this, android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                ActivityCompat.checkSelfPermission( this, android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             Log.d(TAG, String.format("현재상태: Location 사용불가, Build.VERSION.SDK_INT[%d]", Build.VERSION.SDK_INT) );
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                //requestPermissions(new String[] {android.Manifest.permission.ACCESS_FINE_LOCATION}, MY_PERMISSION_REQUEST_FINE_LOCATION);
+                // 퍼미션 요청
+                // ActivityCompat.requestPermissions( this , new String[]{android.Manifest.permission.ACCESS_FINE_LOCATION, android.Manifest.permission.ACCESS_COARSE_LOCATION}, 1001); //Any number can be used
             }
-            return START_STICKY;
+            //return START_STICKY;
         }
-
 
         MeetingRef = FirebaseDatabase.getInstance().getReference().child("Meeting");
         mCount = 0;
-        mLocMan.requestLocationUpdates(mProvider, 3000, 10, mListener);  // 3초, 10m 이상 움직임일때 mListener 요청
-        Log.d(TAG, "현재상태: 서비스 시작" );
-        Toast.makeText(this, "현재상태: 서비스 시작" , Toast.LENGTH_SHORT).show();
+        mLocMan.requestLocationUpdates(mProvider, 5000, 10, mListener);  // 5초, 10m 이상 움직임일때 mListener 요청
+        Log.d(TAG, "위치공유 서비스 시작" );
+        Toast.makeText(this, "위치공유  서비스 시작" , Toast.LENGTH_SHORT).show();
 
         mQuit = false;
 //        NewsThread thread = new NewsThread(this, mHandler);
 //        thread.start();
         return START_STICKY;
-    }
-
-    @Nullable
-    @Override
-    public IBinder onBind(Intent intent) {
-        return null;
     }
 
 
@@ -177,8 +167,6 @@ public class GPSService extends Service {
 //                break;
 //        }
 //    }
-
-
 
 //    class NewsThread extends Thread {
 //        GPSService mParent;

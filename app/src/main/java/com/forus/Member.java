@@ -10,6 +10,8 @@ public class Member {
     private String DisplayName;
     private String NickName   ;
     private String CreateDate ;
+    private String AuthPhotoURL ;
+
 
     public Member() {
       /*Blank default constructor essential for Firebase*/
@@ -41,6 +43,14 @@ public class Member {
 
     public String getCreateDate() {
         return CreateDate;
+    }
+
+    public String getAuthPhotoURL() {
+        return AuthPhotoURL;
+    }
+
+    public void setAuthPhotoURL(String authPhotoURL) {
+        AuthPhotoURL = authPhotoURL;
     }
 
     public void setUid(String uid) {

@@ -31,7 +31,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="100dp"
                 app:srcCompat="@android:drawable/sym_def_app_icon"
-                android:id="@+id/imageView" />
+                android:id="@+id/ivUserPhoto" />
 
             <LinearLayout
                 android:orientation="horizontal"
@@ -50,7 +50,8 @@
                     android:text="a@b.c"
                     android:ems="50"
                     android:id="@+id/etEmail"
-                    android:enabled="false" />
+                    android:enabled="false"
+                    android:textSize="15sp" />
             </LinearLayout>
 
             <LinearLayout
@@ -70,7 +71,8 @@
                     android:text="Richard Song"
                     android:ems="50"
                     android:id="@+id/etDisplayName"
-                    android:enabled="false" />
+                    android:enabled="false"
+                    android:textSize="15sp" />
             </LinearLayout>
 
             <LinearLayout
@@ -90,7 +92,8 @@
                     android:text="Richard Song"
                     android:ems="50"
                     android:id="@+id/etNickName"
-                    android:enabled="true" />
+                    android:enabled="true"
+                    android:textSize="15sp" />
             </LinearLayout>
 
             <LinearLayout
