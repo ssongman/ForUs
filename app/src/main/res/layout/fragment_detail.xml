@@ -33,22 +33,46 @@
                 android:textSize="10sp"
                 android:background="?attr/colorButtonNormal" />
 
-            <TextView
-                android:text="헤이리라이딩 헤이리라이딩"
+            <RelativeLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:textSize="20sp"
-                android:id="@+id/tvMeetName"
-                android:layout_marginLeft="10dp"
-                android:textColor="@android:color/black" />
-            <TextView
-                android:text="생성일시 : 201x.05.01 10:00"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:textSize="8sp"
-                android:id="@+id/tvMeetDateTime"
-                android:layout_marginLeft="10dp"
-                android:textColor="@android:color/black" />
+                android:orientation="horizontal" >
+
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical" >
+
+                    <TextView
+                        android:text="헤이리라이딩 헤이리라이딩"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textSize="20sp"
+                        android:id="@+id/tvMeetName"
+                        android:layout_marginLeft="10dp"
+                        android:textColor="@android:color/black" />
+                    <TextView
+                        android:text="생성일시 : 201x.05.01 10:00"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textSize="8sp"
+                        android:id="@+id/tvMeetDateTime"
+                        android:layout_marginLeft="10dp"
+                        android:textColor="@android:color/black" />
+                </LinearLayout>
+
+                <Button
+                    android:layout_width="66dp"
+                    android:layout_height="50dp"
+                    android:onClick="mOnClick"
+                    android:id="@+id/btnNotify"
+                    android:background="@drawable/img_kakao2"
+                    android:layout_marginLeft="10dp"
+                    android:layout_alignParentTop="true"
+                    android:layout_alignParentEnd="true" />
+            </RelativeLayout>
+
+
 
             <TextView
                 android:layout_width="match_parent"
@@ -115,18 +139,11 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content" >
                 <Button
-                    android:layout_width="198dp"
-                    android:layout_height="50dp"
+                    android:layout_width="200dp"
+                    android:layout_height="wrap_content"
                     android:text="지도보기"
                     android:onClick="mOnClick"
                     android:id="@+id/btnWatchMap" />
-                <Button
-                    android:layout_width="66dp"
-                    android:layout_height="50dp"
-                    android:onClick="mOnClick"
-                    android:id="@+id/btnNotify"
-                    android:background="@drawable/img_kakao2"
-                    android:layout_marginLeft="10dp" />
 
                 <Button
                     android:layout_width="52dp"

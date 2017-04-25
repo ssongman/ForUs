@@ -2,18 +2,18 @@
 <menu xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <item android:title="Authentication"
+    <item android:title="로그아웃"
         android:id="@+id/mnAuth"
         android:icon="?android:attr/actionModeSelectAllDrawable" />
-    <item android:title="My Profile"
+    <item android:title="나의 프로필"
         android:id="@+id/mnProfile"
         android:icon="?android:attr/actionModeSelectAllDrawable" />
-    <item android:title="Meeting List"
+    <item android:title="나의 모임목록"
         android:id="@+id/mnList" />
-    <item android:title="Meeting Create"
+    <item android:title="모임생성"
         android:id="@+id/mnCreate"
         android:icon="?android:attr/actionModeSelectAllDrawable"  />
-    <item android:title="Meeting Participation"
+    <item android:title="모임참여"
         android:id="@+id/mnParticipation"
         android:icon="?android:attr/actionModeSelectAllDrawable"  />
 </menu>

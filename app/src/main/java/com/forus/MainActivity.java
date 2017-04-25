@@ -1,5 +1,7 @@
 package com.forus;
 
+import android.content.Intent;
+import android.net.Uri;
 import android.support.annotation.NonNull;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
@@ -29,6 +31,9 @@ public class MainActivity extends AppCompatActivity {
     private DatabaseReference MembersRef;
     private Query queryRef;
     private boolean firstTime = true;
+    private String MeetingKeyFromKakao;
+    private boolean SharedFromKakaoYN = false;
+    private boolean isFirebaseCalledOnce = false;
 
     // Class declear
     Member member  ;
@@ -41,60 +46,92 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        // MeetingKeyFromKakao = "";
+        Intent intent = getIntent();
+        if (intent != null) {
+            Uri uri = intent.getData();
+            if(uri != null) {
+                MeetingKeyFromKakao = uri.getQueryParameter("MeetingKey");
+                Log.d(TAG, "MeetingKeyFromKakao["+MeetingKeyFromKakao+"]");
+
+                if (MeetingKeyFromKakao != null && !MeetingKeyFromKakao.equals("") ) {
+                    // kakao 에서 호출되었으므로 바로 참여창으로 넘기자.
+                    SharedFromKakaoYN = true;
+                }
+            }
+        }
+
         // Auth
         mAuth = FirebaseAuth.getInstance();
 
         mAuth.addAuthStateListener(new FirebaseAuth.AuthStateListener() {
                 @Override
                 public void onAuthStateChanged(@NonNull FirebaseAuth firebaseAuth) {
-                    FirebaseUser user = firebaseAuth.getCurrentUser();
-                    if (user != null) {
-                        // User is signed in
-                        Log.d(TAG, "it is authenticate [SIgn IN]");
-                        Log.d(TAG, "onAuthStateChanged getUid:" + user.getUid());
-                        Log.d(TAG, "onAuthStateChanged getDisplayName:" + user.getDisplayName());
-                        Log.d(TAG, "onAuthStateChanged getEmail:" + user.getEmail());
-                        Log.d(TAG, "onAuthStateChanged getProviders:" + user.getProviders());
+                    // AuthState 가 여러번 수행되어서 이렇게 변수하나 사용하여 한번만 수행되도록 수정한다.
+                    if (!isFirebaseCalledOnce) {
+                        isFirebaseCalledOnce = true;
+                        FirebaseUser user = firebaseAuth.getCurrentUser();
+                        if (user != null) {
+                            // User is signed in
+                            Log.d(TAG, "it is authenticate [SIgn IN]");
+                            Log.d(TAG, "onAuthStateChanged getUid:" + user.getUid());
+                            Log.d(TAG, "onAuthStateChanged getDisplayName:" + user.getDisplayName());
+                            Log.d(TAG, "onAuthStateChanged getEmail:" + user.getEmail());
+                            Log.d(TAG, "onAuthStateChanged getProviders:" + user.getProviders());
 
-                        AuthUid = user.getUid();
+                            AuthUid = user.getUid();
 
-                        // 멤버정보 가져오기 from DB - NickName
-                        MembersRef = FirebaseDatabase.getInstance().getReference().child("Members");
-                        queryRef = MembersRef.child(AuthUid);    // key
-                        queryRef.addValueEventListener(new ValueEventListener() {
-                            @Override
-                            public void onDataChange(DataSnapshot snapshot) {
-                                //Getting the data from snapshot
-                                member = snapshot.getValue(Member.class);   // 개인정보를 member class 에 담는다.
-                                // member.getUid()
-                                // member.getEmail()
-                                // member.getDisplayName()
-                                // member.getNickName()
+                            // 멤버정보 가져오기 from DB - NickName
+                            MembersRef = FirebaseDatabase.getInstance().getReference().child("Members");
+                            queryRef = MembersRef.child(AuthUid);    // key
+                            queryRef.addValueEventListener(new ValueEventListener() {   // 여기서는 singleEvent 사용하지 않고 addValueEventListener 사용한다. 왜냐고? 멤버정보가 변경될때마다가 member class를 갱신해주기 위해
+                                @Override
+                                public void onDataChange(DataSnapshot snapshot) {
+                                    //Getting the data from snapshot
+                                    member = snapshot.getValue(Member.class);   // 개인정보를 member class 에 담는다.
+                                    // member.getUid()
+                                    // member.getEmail()
+                                    // member.getDisplayName()
+                                    // member.getNickName()
+                                }
+
+                                @Override
+                                public void onCancelled(DatabaseError databaseError) {
+                                    Log.w(TAG, "Failed to read value.", databaseError.toException());
+                                }
+                            });
+
+                            if (SharedFromKakaoYN) {
+                                // kakao 앱에서 호출되었으므로 바로 참여창으로 넘기자.
+                                Fragment fr = new PartFragment();
+                                Bundle args = new Bundle();
+                                args.putString("param1", MeetingKeyFromKakao);
+                                fr.setArguments(args);
+                                getSupportFragmentManager().beginTransaction().
+                                        add(R.id.fragment_container, fr, "Part").commit();
+
+                                firstTime = false;
+                            } else {
+                                if (firstTime) {   // 앱실행후 처음일때만 수행함.  왜냐고? onAuthStateChanged callback 함수의 특성상 권한이 변경될때마다 실행되기 때문.
+                                    // 처음으로 접속시 AuthFragment 로
+                                    getSupportFragmentManager().beginTransaction().
+                                            add(R.id.fragment_container, new ListFragment(), "List").commit();
+                                    firstTime = false;
+                                }
                             }
 
-                            @Override
-                            public void onCancelled(DatabaseError databaseError) {
-                                Log.w(TAG, "Failed to read value.", databaseError.toException());
+
+                        } else {
+                            // User is signed out
+                            Log.d(TAG, "it is not authenticate...");
+                            //                    ivPhotoURL.setImageResource(android.R.drawable.ic_menu_more);
+
+                            if (firstTime) {   // 처음일때만 수행함.
+                                // 처음으로 접속시 AuthFragment 로
+                                getSupportFragmentManager().beginTransaction().
+                                        add(R.id.fragment_container, new AuthFragment(), "Auth").commit();
+                                firstTime = false;
                             }
-                        });
-
-                        if (firstTime) {   // 처음일때만 수행함.
-                            // 처음으로 접속시 AuthFragment 로
-                            getSupportFragmentManager().beginTransaction().
-                                    add(R.id.fragment_container, new ListFragment(), "List").commit();
-                            firstTime = false;
-                        }
-
-                    } else {
-                        // User is signed out
-                        Log.d(TAG, "it is not authenticate...");
-    //                    ivPhotoURL.setImageResource(android.R.drawable.ic_menu_more);
-
-                        if (firstTime) {   // 처음일때만 수행함.
-                            // 처음으로 접속시 AuthFragment 로
-                            getSupportFragmentManager().beginTransaction().
-                                    add(R.id.fragment_container, new AuthFragment(), "Auth").commit();
-                            firstTime = false;
                         }
                     }
                 }
@@ -210,7 +247,7 @@ public class MainActivity extends AppCompatActivity {
         FragmentManager fragmentManager = this.getSupportFragmentManager();
         Fragment currentFragment = fragmentManager.findFragmentById(R.id.fragment_container);
         String currTag = currentFragment.getTag();
-        if (currTag == null || !currTag.equals(aTag.toString())) {
+        if (currTag == null || !currTag.equals(aTag.toString())) {      // 자기 화면을 다시 call 하는 일을 없애기 위해서...
             // Create new fragment and transaction
             android.support.v4.app.FragmentTransaction transaction = fragmentManager.beginTransaction();
             transaction.replace(R.id.fragment_container, fr, aTag);

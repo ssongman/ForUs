@@ -1,10 +1,12 @@
 package com.forus;
 
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
+import android.support.v7.app.AlertDialog;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -97,6 +99,25 @@ public class PartFragment extends Fragment  {
             MeetingKey = getArguments().getString(ARG_PARAM1);  // MeetingKey
             //mParam2 = getArguments().getString(ARG_PARAM2);  // Meeting
             Log.d(TAG,"MeetingKey["+MeetingKey+"]  ");
+
+            // 반드시 모임정보가 있어야 함.
+            if (MeetingKey ==null || MeetingKey.equals("")) {
+                Log.d(TAG,"모임정보가 존재하지 않습니다.");
+
+                new AlertDialog.Builder(getActivity())
+                        .setTitle("질문")
+                        .setMessage("모임정보가 존재하지 않습니다. \n모임에서 나가시겠습니까?")
+                        .setPositiveButton("예", new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialogInterface, int i) {
+                                getActivity().getSupportFragmentManager().popBackStack();
+                            }
+                        })
+                        .setNegativeButton("아니오", null)
+                        .show();
+            }
+
+
         }
         AuthUid = ((MainActivity)getActivity()).getAuthUid();
         member = ((MainActivity)getActivity()).getMember();

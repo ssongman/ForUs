@@ -29,6 +29,11 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.Query;
 import com.google.firebase.database.ValueEventListener;
+import com.kakao.kakaolink.AppActionBuilder;
+import com.kakao.kakaolink.AppActionInfoBuilder;
+import com.kakao.kakaolink.KakaoLink;
+import com.kakao.kakaolink.KakaoTalkLinkMessageBuilder;
+import com.kakao.util.KakaoParameterException;
 import com.squareup.picasso.Picasso;
 
 import java.util.ArrayList;
@@ -191,36 +196,7 @@ public class DetailFragment extends Fragment {
             public void onClick(View v) {
                 // Log.d(TAG,"btnNotify");
 
-//                FeedTemplate params = FeedTemplate
-//                        .newBuilder(ContentObject.newBuilder("디저트 사진",
-//                                "http://mud-kage.kakao.co.kr/dn/NTmhS/btqfEUdFAUf/FjKzkZsnoeE4o19klTOVI1/openlink_640x640s.jpg",
-//                                LinkObject.newBuilder().setWebUrl("https://dev.kakao.com")
-//                                        .setMobileWebUrl("https://dev.kakao.com").build())
-//                                .setDescrption("아메리카노, 빵, 케익")
-//                                .build())
-//                        .setSocial(SocialObject.newBuilder().setLikeCount(10).setCommentCount(20)
-//                                .setSharedCount(30).setViewCount(40).build())
-//                        .addButton(new ButtonObject("웹에서 보기", LinkObject.newBuilder().setWebUrl("'https://dev.kakao.com").setMobileWebUrl("'https://dev.kakao.com").build()))
-//                        .addButton(new ButtonObject("앱에서 보기", LinkObject.newBuilder()
-//                                .setWebUrl("'https://dev.kakao.com")
-//                                .setMobileWebUrl("'https://dev.kakao.com")
-//                                .setAndroidExecutionParams("key1=value1")
-//                                .setIosExecutionParams("key1=value1")
-//                                .build()))
-//                        .build();
-//
-//                KakaoLinkService.getInstance().sendDefault(this, params, new ResponseCallback<KakaoLinkResponse>() {
-//                    @Override
-//                    public void onFailure(ErrorResult errorResult) {
-//                        Logger.e(errorResult.toString());
-//                    }
-//
-//                    @Override
-//                    public void onSuccess(KakaoLinkResponse result) {
-//
-//                    }
-//                });
-
+                shareKaKao();
                 // update Notify_yn
                 MeetingRef.child(MeetingKey).child("MtNotify_yn").setValue("Y");
             }
@@ -303,35 +279,55 @@ public class DetailFragment extends Fragment {
         }
     }
 
-//    private boolean runtime_permissions() {
-//        Log.d(TAG, "[runtime_permissions] Build.VERSION.SDK_INT [" + Build.VERSION.SDK_INT + "],   ");
-//        Log.d(TAG, "[runtime_permissions] PackageManager.PERMISSION_GRANTED [" + PackageManager.PERMISSION_GRANTED + "],   ");
-//        Log.d(TAG, "[runtime_permissions] ContextCompat.checkSelfPermission(getActivity(), android.Manifest.permission.ACCESS_FINE_LOCATION) [" + ContextCompat.checkSelfPermission(getActivity(), android.Manifest.permission.ACCESS_FINE_LOCATION)  + "],   ");
-//        if (Build.VERSION.SDK_INT >= 21 &&
-//                ContextCompat.checkSelfPermission(getActivity(), android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
-//                ContextCompat.checkSelfPermission(getActivity(), android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-//
-//            requestPermissions(new String[]{android.Manifest.permission.ACCESS_FINE_LOCATION, android.Manifest.permission.ACCESS_COARSE_LOCATION},REQUEST_PERMISSIONS);
-//            btnLocal_enable(true);
-//            return true;
-//        }
-//        btnLocal_enable(false);
-//        return false;
-//    }
+    public void shareKaKao() {
+        try {
+            final KakaoLink kakaoLink = KakaoLink.getKakaoLink(getActivity()) ;
+            final KakaoTalkLinkMessageBuilder kakaoBuilder = kakaoLink.createKakaoTalkLinkMessageBuilder();
 
-//    @Override
-//    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
-//        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-//
-//        if(requestCode == REQUEST_PERMISSIONS){
-//            if( grantResults[0] == PackageManager.PERMISSION_GRANTED && grantResults[1] == PackageManager.PERMISSION_GRANTED){
-//                btnLocal_enable(true);
-//            }else {
-//                Toast.makeText(getActivity(), "Please allow the permission", Toast.LENGTH_LONG).show();
-//                runtime_permissions();
-//            }
-//        }
-//    }
+            kakaoBuilder.addText("ForUs Link");
+            String url = "https://lh4.googleusercontent.com/-6AAwrT0qFEM/AAAAAAAAAAI/AAAAAAAAAMQ/LG3Sb6MbquE/s96-c/photo.jpg";
+            kakaoBuilder.addImage(url, 400, 400);
+
+            kakaoBuilder
+                    .addAppButton("앱으로 입장", new AppActionBuilder()
+                    .addActionInfo(AppActionInfoBuilder
+                            .createAndroidActionInfoBuilder()
+                            .setExecuteParam("MeetingKey=" + MeetingKey)
+                            .setMarketParam("referrer=kakaotalklink")
+                            .build())
+                    .addActionInfo(AppActionInfoBuilder
+                            .createiOSActionInfoBuilder()
+                            .setExecuteParam("MeetingKey=1111")
+                            .build())
+                    .build()
+            );
+//            kakaoBuilder
+//                    .addAppLink("자세히 보기",  new AppActionBuilder()
+//                    .addActionInfo(AppActionInfoBuilder
+//                        .createAndroidActionInfoBuilder()
+//                        .setExecuteParam("MeetingKey=1234")
+//                        .setMarketParam("referrer=kakaotalklink")
+//                        .build())
+//                    .addActionInfo(AppActionInfoBuilder
+//                        .createiOSActionInfoBuilder()
+//                        .setExecuteParam("MeetingKey=1234")
+//                        .build())
+//                    .build());
+
+            kakaoLink.sendMessage(kakaoBuilder, getActivity());
+            /*
+            이미지 추가 시 가로,세로 사이즈는 최소 81px 이상으로 해주어야 하며, 500kb 이하의 이미지가 가능.
+            addAppButton() 으로 추가 한 버튼을 클릭할 경우, 사용자의 스마트폰 단말기에서
+            내가 카카오 개발자센터에서 등록한 패키지로 설치유무를 확인합니다.
+                    미 설치시 등록되어있는 마켓URL로 이동하게 되고..
+            설치되어 있는 경우 등록 된 앱을 실행하여 <intent-filter>를 등록한 Activity를 띄워줍니다.
+            */
+
+
+        } catch (KakaoParameterException e) {
+            e.printStackTrace();
+        }
+    }
 
 
     @Override
