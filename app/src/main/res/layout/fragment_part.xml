@@ -2,157 +2,125 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     tools:context="com.forus.PartFragment">
 
     <!-- TODO: Update blank fragment layout -->
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="모임에 가입하시기 바랍니다."
-        android:layout_marginLeft="10dp" />
-
-    <RelativeLayout
+    <LinearLayout
         android:orientation="vertical"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_margin="20dp">
+        android:layout_margin="0dp">
 
+        <ImageView
+            android:layout_width="match_parent"
+            android:layout_height="94dp"
+            app:srcCompat="@drawable/img_outdoor"
+            android:id="@+id/imageView" />
 
-        <TableLayout
+        <TextView
+            android:text="모임정보"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:id="@+id/tablelayout1" >
+            android:textSize="10sp"
+            android:background="?attr/colorButtonNormal"
+            android:layout_marginTop="10dp" />
 
-            <TableRow
-                android:layout_width="match_parent"
-                android:layout_height="match_parent" >
 
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="vertical" >
+
+            <TextView
+                android:text="헤이리라이딩 헤이리라이딩"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textSize="20sp"
+                android:id="@+id/tvMeetName"
+                android:layout_marginLeft="10dp"
+                android:textColor="@android:color/black" />
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal" >
                 <TextView
-                    android:text="모임이름"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content" />
-
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="Meet Name"
-                    android:id="@+id/tvMeetName"
-                    android:layout_marginLeft="10dp" />
-
-            </TableRow>
-
-            <TableRow
-                android:layout_width="match_parent"
-                android:layout_height="match_parent" >
-
-                <TextView
-                    android:text="모임생성"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:id="@+id/textView4"
-                    android:gravity="center" />
-
-                <LinearLayout
-                    android:orientation="horizontal"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content">
-
-                    <TextView
-                        android:layout_width="100dp"
-                        android:layout_height="wrap_content"
-                        android:text="20170315"
-                        android:id="@+id/tvMeetDate"
-                        android:layout_marginLeft="10dp" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="1000"
-                        android:id="@+id/tvMeetTime" />
-                </LinearLayout>
-
-            </TableRow>
-
-            <TableRow
-                android:layout_width="match_parent"
-                android:layout_height="match_parent" >
-
-                <TextView
-                    android:text="모임설명"
+                    android:text="모임장 : 쏭맨     "
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:gravity="center" />
-
+                    android:textSize="8sp"
+                    android:id="@+id/tvMeetLeader"
+                    android:layout_marginLeft="10dp"
+                    android:textColor="@android:color/holo_red_dark" />
                 <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="100dp"
-                    android:text="Description"
-                    android:id="@+id/tvMeetDesc"
-                    android:layout_marginLeft="10dp" />
-
-            </TableRow>
-
-            <TableRow
-                android:layout_width="match_parent"
-                android:layout_height="match_parent" >
-
-                <TextView
-                    android:text="비밀번호"
+                    android:text="생성일시 : 201x.05.01 10:00"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:gravity="center" />
+                    android:textSize="8sp"
+                    android:id="@+id/tvMeetCrdt"
+                    android:layout_marginLeft="20dp"
+                    android:textColor="@android:color/black" />
+            </LinearLayout>
+        </LinearLayout>
 
-                <EditText
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text=""
-                    android:ems="8"
-                    android:id="@+id/etMeetPass"
-                    android:inputType="numberPassword"
-                    android:backgroundTint="@android:color/background_light"
-                    android:layout_marginLeft="10dp" />
+        <TextView
+            android:text="모임설명"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textSize="10sp"
+            android:background="?attr/colorButtonNormal"
+            android:layout_marginTop="10dp" />
 
-            </TableRow>
-        </TableLayout>
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="100dp"
+            android:text="Description"
+            android:id="@+id/tvMeetDesc"
+            android:layout_marginLeft="10dp" />
+
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="비밀번호"
+            android:textSize="10sp"
+            android:background="?attr/colorButtonNormal"
+            android:layout_marginTop="10dp" />
+
+        <EditText
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text=""
+            android:ems="8"
+            android:id="@+id/etMeetPass"
+            android:inputType="numberPassword"
+            android:backgroundTint="@android:color/darker_gray"
+            android:layout_marginLeft="10dp" />
+
         <TextView
             android:text="비밀번호를 입력 후 모임에 참여하세요."
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_below="@+id/tablelayout1"
-            android:layout_alignParentStart="true"
-            android:id="@+id/textView" />
+            android:id="@+id/textView"
+            android:layout_marginLeft="10dp" />
 
         <LinearLayout
             android:orientation="vertical"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_alignParentBottom="true">
+            android:layout_marginTop="30dp">
 
-
-            <LinearLayout
-                android:orientation="horizontal"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content">
                 <Button
-                    android:text="Participation"
-                    android:layout_width="wrap_content"
+                    android:text="모임참여"
+                    android:layout_width="match_parent"
                     android:layout_height="50dp"
-                    android:layout_weight="1"
                     android:onClick="mOnClick"
                     android:id="@+id/btnParticipation" />
-                <Button
-                    android:text="Cancel"
-                    android:layout_width="wrap_content"
-                    android:layout_height="50dp"
-                    android:layout_weight="1"
-                    android:onClick="mOnClick"
-                    android:id="@+id/btnCancel" />
-            </LinearLayout>
-
 
         </LinearLayout>
 
 
-    </RelativeLayout>
+    </LinearLayout>
 
 </FrameLayout>

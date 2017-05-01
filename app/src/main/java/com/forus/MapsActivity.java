@@ -59,7 +59,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     private SlidingDrawer slidingDrawer;
     private Context context;
     private Button btnClickMe, btnHandle;
-    private TextView tvText1;
     private CheckBox cbWakeLock;
     private PowerManager mPm;
     private PowerManager.WakeLock mWakeLock;
@@ -67,6 +66,9 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
     private ArrayList<MtMember> arMtMembers;
     private ArrayList<String> arMtMemberKeys;
+
+    private boolean firstAnimateCamera = true;
+    private LatLngBounds.Builder builder;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -87,18 +89,16 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         context = this.getApplicationContext();
         btnHandle = (Button) findViewById(R.id.btnHandle);
         btnClickMe = (Button) findViewById(R.id.btnClickMe);
-        tvText1 = (TextView) findViewById(R.id.tvText1);
         slidingDrawer = (SlidingDrawer) findViewById(R.id.slidingDrawer);
         cbWakeLock = (CheckBox) findViewById(R.id.cbWakeLock);
         mPm = (PowerManager) getSystemService(Context.POWER_SERVICE);
         mWakeLock = mPm.newWakeLock(PowerManager.FULL_WAKE_LOCK, "WakeAlways");
 
-
         slidingDrawer.setOnDrawerOpenListener(new SlidingDrawer.OnDrawerOpenListener() {
             @Override
             public void onDrawerOpened() {
                 btnHandle.setText("-");
-                tvText1.setText("Aleady dragged...");
+                Log.d(TAG, "Aleady dragged...");
             }
         });
 
@@ -106,7 +106,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             @Override
             public void onDrawerClosed() {
                 btnHandle.setText("+");
-                tvText1.setText("For more info drag the button..");
+                Log.d(TAG, "For more info drag the button..");
             }
         });
 
@@ -159,15 +159,25 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     }
 
     public void mOnClick(View v) {
-        int i = 0;
-        for (Marker marker : mMarkerArray) {
-            marker.showInfoWindow();
-            if (i == 1) {
-                marker.setVisible(true);
-                marker.setPosition(new LatLng(37.518550, 126.940200));
-            }
-            i++;
-            //marker.remove(); <-- works too!
+        switch (v.getId()) {
+            case R.id.ViewAllMember:
+//                // build the LatLngBounds object
+                LatLngBounds bounds = builder.build();
+                mMap.animateCamera(CameraUpdateFactory.newLatLngBounds(bounds, 200));  // padding : 200
+                break;
+
+            case R.id.ViewMemberTitle:
+                int i = 0;
+                for (Marker marker : mMarkerArray) {
+                    marker.showInfoWindow();
+                    if (i == 1) {
+                        marker.setVisible(true);
+                        marker.setPosition(new LatLng(37.518550, 126.940200));
+                    }
+                    i++;
+                    //marker.remove(); <-- works too!
+                }
+                break;
         }
     }
 
@@ -210,7 +220,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
                 mMarkerArray.clear();
                 mMap.clear();
-                LatLngBounds.Builder b = new LatLngBounds.Builder();
+
+                builder = new LatLngBounds.Builder();
 
                 arMtMembers = new ArrayList<MtMember>();
                 arMtMemberKeys = new ArrayList<String>();
@@ -243,16 +254,19 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                         Log.d(TAG, "Marker added 닉네임["+mtMember.getNickName().toString()+"]");
                         mcnt++;
 
-                        b.include( marker.getPosition() );
+                        builder.include( marker.getPosition() );
                     }
                 }
                 mMap.setMapType(GoogleMap.MAP_TYPE_NORMAL);
                 mMap.getUiSettings().setZoomControlsEnabled(true);
 
-                if ( mcnt > 0 ) {
-                    // build the LatLngBounds object
-                    LatLngBounds bounds = b.build();
-                    mMap.animateCamera(CameraUpdateFactory.newLatLngBounds(bounds, 200));  // padding : 200
+                if (firstAnimateCamera) {   // 처음에만 자동으로 뿌려준다.
+                    if (mcnt > 0) {
+                        // build the LatLngBounds object
+                        LatLngBounds bounds = builder.build();
+                        mMap.animateCamera(CameraUpdateFactory.newLatLngBounds(bounds, 200));  // padding : 200
+                        firstAnimateCamera = false;
+                    }
                 }
 
 //                // 위경도의 평균치를 구해서 화면을 이동.
@@ -260,7 +274,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 //                mlongitude_new = average(mlongitude_list);
 //                LatLng location_markers_aver = new LatLng(mlatitude_new, mlongitude_new);
 //                mMap.moveCamera(CameraUpdateFactory.newLatLng( location_markers_aver ));
-////                mMap.animateCamera(CameraUpdateFactory.newLatLngZoom( location_markers_aver, 15));
+//                mMap.animateCamera(CameraUpdateFactory.newLatLngZoom( location_markers_aver, 15));
             }
 
             @Override

@@ -61,9 +61,13 @@ public class ListFragment extends Fragment {
     public ListView lvMeeting;
     private static final String TAG = "ForUs ListFragment";
     private DatabaseReference MeetingRef;
+    private DatabaseReference MemberMeetRef;
     private Query queryRef;
+    private Query queryRef2;
 
-    String AuthUid        ;
+    private String AuthUid        ;
+    private String MeetingKey     ;
+    private Meeting meeting;
 
 
     public ListFragment() {
@@ -128,12 +132,13 @@ public class ListFragment extends Fragment {
 
         // 모임정보 읽어오기 from DB
         MeetingRef = FirebaseDatabase.getInstance().getReference().child("Meeting");
+        MemberMeetRef = FirebaseDatabase.getInstance().getReference().child("Members").child(AuthUid).child("MemberMeet");
         //MeetingRef = FirebaseDatabase.getInstance().getReference().child("Meeting").orderByChild("MtMembers").equalTo(AuthUid);
         //queryRef = MeetingRef.orderByChild("MtMembers").equalTo(AuthUid);
         //queryRef = MeetingRef.orderByChild("MtMembers").startAt(AuthUid).endAt(AuthUid);
         //queryRef = MeetingRef.child("MtMembers").child(AuthUid).orderByChild("PartYN").equalTo("Y");
 //        queryRef = MeetingRef.limitToFirst(10);    // 일단 10개만 읽는다.  나중에 변경하자.
-        queryRef = MeetingRef;
+        queryRef = MemberMeetRef;
 
         queryRef.addValueEventListener(new ValueEventListener() {    // addValueEventListener,  addListenerForSingleValueEvent
             @Override
@@ -141,12 +146,32 @@ public class ListFragment extends Fragment {
                 arMeetings.clear();
                 arMeetingKey.clear();
                 for (DataSnapshot postSnapshot : snapshot.getChildren()) {
-                    //Getting the data from snapshot
-                    Meeting meeting = postSnapshot.getValue(Meeting.class);
-                    arMeetings.add(meeting);
-                    arMeetingKey.add(postSnapshot.getKey());
+                    // Getting the data from snapshot
+                    MeetingKey = postSnapshot.getKey();
+
+                    // 모임정보 가져오기
+                    queryRef2 = MeetingRef.child(MeetingKey);    // key
+                    queryRef2.addListenerForSingleValueEvent(new ValueEventListener() {    // addValueEventListener,  addListenerForSingleValueEvent
+                        @Override
+                        public void onDataChange(DataSnapshot snapshot) {
+                            //Getting the data from snapshot
+                            meeting = snapshot.getValue(Meeting.class);
+                            arMeetings.add( meeting );
+                            arMeetingKey.add( MeetingKey );
+                            arAdapter.notifyDataSetChanged();
+                        }
+
+                        @Override
+                        public void onCancelled(DatabaseError databaseError) {
+                            Log.w(TAG, "Failed to read value.", databaseError.toException());
+                        }
+                    });
+
+                    //meeting.setMtMembersCnt(5);
+//                    arMeetings.add( meeting );
+//                    arMeetingKey.add( MeetingKey );
                 }
-                arAdapter.notifyDataSetChanged();
+//                arAdapter.notifyDataSetChanged();
             }
 
             @Override
@@ -279,25 +304,33 @@ public class ListFragment extends Fragment {
 
             TextView tvMtSN = (TextView) convertView.findViewById(R.id.tvMtSN);
             TextView tvMtName = (TextView) convertView.findViewById(R.id.tvMtName);
-            TextView tvMtDateTime = (TextView) convertView.findViewById(R.id.tvMtDateTime);
-            TextView tvMtTOT = (TextView) convertView.findViewById(R.id.tvMtTOT);
+            TextView tvMtLeader = (TextView) convertView.findViewById(R.id.tvMtLeader);
+            TextView tvMtMembersCnt = (TextView) convertView.findViewById(R.id.tvMtMembersCnt);
 
             try {
-                String MtName, MtDateTime;
-                MtName = arSrc.get(position).getMtName().toString();
-                MtDateTime = arSrc.get(position).getMtFrdt().toString() + " " + arSrc.get(position).getMtFrtm().toString();
-                Log.d(TAG, "position["+position+"], MtName[" + MtName + "], MtDateTime["+MtDateTime+"]");
+                String MtName, MtLeader, MtMembersCnt;
+                if (arSrc.get(position).getMtName() != null) {
+                    MtName = arSrc.get(position).getMtName().toString();
+                } else {
+                    MtName = "";
+                }
+                if (arSrc.get(position).getMtLeader() != null) {
+                    MtLeader = arSrc.get(position).getMtLeader().toString();
+                } else {
+                    MtLeader = "";
+                }
+                MtMembersCnt = String.valueOf( arSrc.get(position).getMtMembersCnt() );
+                if (MtMembersCnt == null) MtMembersCnt = "";
+                Log.d(TAG, "position["+position+"], MtName[" + MtName + "], MtMtLeader["+MtLeader+"], MtMembersCnt["+MtMembersCnt+"]");
 
                 tvMtSN.setText(String.valueOf(position + 1));
                 tvMtName.setText(MtName);
-                tvMtDateTime.setText(MtDateTime);
-                tvMtTOT.setText("0명");
+                tvMtLeader.setText("모임장: " + MtLeader);
+                tvMtMembersCnt.setText(MtMembersCnt + "명");
 
             } catch(Exception e) {
                 Log.d(TAG, "Exception: " + e.getMessage() );
             }
-
-
 
             return convertView;
         }

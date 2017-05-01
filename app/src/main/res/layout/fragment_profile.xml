@@ -25,7 +25,7 @@
                 android:layout_height="wrap_content"
                 android:layout_margin="20dp"
                 android:layout_gravity="center"
-                android:text="My Profile" />
+                android:text="나의 프로필" />
 
             <ImageView
                 android:layout_width="match_parent"
@@ -83,13 +83,13 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Nick Name" />
+                    android:text="닉네임" />
 
                 <EditText
                     android:layout_width="200dp"
                     android:layout_height="wrap_content"
                     android:inputType="textPersonName"
-                    android:text="Richard Song"
+                    android:text="Test Richard Song"
                     android:ems="50"
                     android:id="@+id/etNickName"
                     android:enabled="true"
@@ -104,7 +104,7 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="please modify your Nick Name"
+                    android:text="넥네임을 수정할 수 있습니다."
                     android:textColor="@android:color/holo_red_dark" />
             </LinearLayout>
 
@@ -118,7 +118,7 @@
             android:layout_height="wrap_content"
             android:layout_alignParentBottom="true">
             <Button
-                android:text="Save"
+                android:text="저장"
                 android:layout_width="wrap_content"
                 android:layout_height="50dp"
                 android:layout_weight="1"
@@ -126,6 +126,12 @@
         </LinearLayout>
 
     </RelativeLayout>
+
+    <TextView
+        android:text="나의 프로필"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/textView2" />
 
 
 </FrameLayout>

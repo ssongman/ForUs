@@ -51,14 +51,28 @@
                         android:id="@+id/tvMeetName"
                         android:layout_marginLeft="10dp"
                         android:textColor="@android:color/black" />
-                    <TextView
-                        android:text="생성일시 : 201x.05.01 10:00"
+
+                    <LinearLayout
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:textSize="8sp"
-                        android:id="@+id/tvMeetDateTime"
-                        android:layout_marginLeft="10dp"
-                        android:textColor="@android:color/black" />
+                        android:orientation="horizontal" >
+                        <TextView
+                            android:text="모임장 : 쏭맨     "
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:textSize="8sp"
+                            android:id="@+id/tvMeetLeader"
+                            android:layout_marginLeft="10dp"
+                            android:textColor="@android:color/holo_red_dark" />
+                        <TextView
+                            android:text="생성일시 : 201x.05.01 10:00"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:textSize="8sp"
+                            android:id="@+id/tvMeetCrdt"
+                            android:layout_marginLeft="20dp"
+                            android:textColor="@android:color/black" />
+                    </LinearLayout>
                 </LinearLayout>
 
                 <Button
@@ -94,6 +108,7 @@
                 android:text="모임멤버"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:id="@+id/tvMeetMember"
                 android:textSize="10sp"
                 android:background="?attr/colorButtonNormal" />
 
@@ -139,19 +154,24 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content" >
                 <Button
-                    android:layout_width="200dp"
-                    android:layout_height="wrap_content"
+                    android:layout_width="wrap_content"
+                    android:layout_height="50dp"
+                    android:layout_weight="1"
                     android:text="지도보기"
                     android:onClick="mOnClick"
                     android:id="@+id/btnWatchMap" />
 
                 <Button
-                    android:layout_width="52dp"
+                    android:layout_width="wrap_content"
                     android:layout_height="50dp"
+                    android:layout_weight="1"
+                    android:text="모임나가기"
                     android:onClick="mOnClick"
                     android:id="@+id/btnMeetExit"
-                    android:background="@drawable/img_exit_icon"
-                    android:layout_marginLeft="10dp" />
+                    />
+                    <!--android:background="@drawable/img_exit_icon"-->
+                    <!--android:layout_marginLeft="10dp" -->
+
             </LinearLayout>
 
         </LinearLayout>

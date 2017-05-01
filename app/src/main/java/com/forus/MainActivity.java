@@ -12,6 +12,7 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
+import android.widget.Toast;
 
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
@@ -34,6 +35,7 @@ public class MainActivity extends AppCompatActivity {
     private String MeetingKeyFromKakao;
     private boolean SharedFromKakaoYN = false;
     private boolean isFirebaseCalledOnce = false;
+    private long pressedTime ;
 
     // Class declear
     Member member  ;
@@ -84,7 +86,7 @@ public class MainActivity extends AppCompatActivity {
                             // 멤버정보 가져오기 from DB - NickName
                             MembersRef = FirebaseDatabase.getInstance().getReference().child("Members");
                             queryRef = MembersRef.child(AuthUid);    // key
-                            queryRef.addValueEventListener(new ValueEventListener() {   // 여기서는 singleEvent 사용하지 않고 addValueEventListener 사용한다. 왜냐고? 멤버정보가 변경될때마다가 member class를 갱신해주기 위해
+                            queryRef.addValueEventListener(new ValueEventListener() {   // 여기서는 addListenerForSingleValueEvent 사용하지 않고 addValueEventListener 사용한다. 왜냐고? 멤버정보가 변경될때마다가 member class를 갱신해주기 위해
                                 @Override
                                 public void onDataChange(DataSnapshot snapshot) {
                                     //Getting the data from snapshot
@@ -120,7 +122,6 @@ public class MainActivity extends AppCompatActivity {
                                 }
                             }
 
-
                         } else {
                             // User is signed out
                             Log.d(TAG, "it is not authenticate...");
@@ -137,59 +138,6 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
         );
-
-//        mAuthListener = new FirebaseAuth.AuthStateListener() {
-//            @Override
-//            public void onAuthStateChanged(@NonNull FirebaseAuth firebaseAuth) {
-//                FirebaseUser user = firebaseAuth.getCurrentUser();
-//                if (user != null) {
-//                    // User is signed in
-//                    Log.d(TAG, "it is authenticate [SIgn IN]");
-//                    Log.d(TAG, "onAuthStateChanged getUid:" + user.getUid());
-//                    Log.d(TAG, "onAuthStateChanged getDisplayName:" + user.getDisplayName());
-//                    Log.d(TAG, "onAuthStateChanged getEmail:" + user.getEmail());
-//                    Log.d(TAG, "onAuthStateChanged getProviders:" + user.getProviders());
-//
-//                    AuthUid = user.getUid();
-//
-//                    // 멤버정보 가져오기 from DB - NickName
-//                    MembersRef = FirebaseDatabase.getInstance().getReference().child("Members");
-//                    queryRef = MembersRef.child(AuthUid);    // key
-//                    queryRef.addValueEventListener(new ValueEventListener() {
-//                        @Override
-//                        public void onDataChange(DataSnapshot snapshot) {
-//                            //Getting the data from snapshot
-//                            member = snapshot.getValue(Member.class);   // 개인정보를 member class 에 담는다.
-//                            // member.getUid()
-//                            // member.getEmail()
-//                            // member.getDisplayName()
-//                            // member.getNickName()
-//                        }
-//
-//                        @Override
-//                        public void onCancelled(DatabaseError databaseError) {
-//                            Log.w(TAG, "Failed to read value.", databaseError.toException());
-//                        }
-//                    });
-//
-//                    if (firstTime) {   // 처음일때만 수행함.
-//                        // 처음으로 접속시 AuthFragment 로
-//                        getSupportFragmentManager().beginTransaction().
-//                                add(R.id.fragment_container, new ListFragment()).commit();
-//                        firstTime = false;
-//                    }
-//
-//                } else {
-//                    // User is signed out
-//                    Log.d(TAG, "it is not authenticate...");
-////                    ivPhotoURL.setImageResource(android.R.drawable.ic_menu_more);
-//
-//                    // 처음으로 접속시 AuthFragment 로
-//                    getSupportFragmentManager().beginTransaction().
-//                            add(R.id.fragment_container, new AuthFragment()).commit();
-//                }
-//            }
-//        };
 
     }
 
@@ -255,7 +203,6 @@ public class MainActivity extends AppCompatActivity {
             transaction.commit();
         }
 
-
         return false;
     }
 
@@ -293,6 +240,34 @@ public class MainActivity extends AppCompatActivity {
         builder.setMessage(string);
         builder.setPositiveButton("확인", null);
         builder.show();
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+    }
+
+    @Override
+    public void onBackPressed() {
+        Log.d(TAG, "Number of entries in backstack "+ getSupportFragmentManager().getBackStackEntryCount());
+        if (getSupportFragmentManager().getBackStackEntryCount() == 0) {
+            if (pressedTime == 0) {
+                Toast.makeText(MainActivity.this, "한 번 더 누르면 종료됩니다.", Toast.LENGTH_SHORT).show();
+                pressedTime = System.currentTimeMillis();
+            } else {
+                int seconds = (int) (System.currentTimeMillis() - pressedTime);
+
+                if (seconds > 2000) {
+                    Toast.makeText(MainActivity.this, "한 번 더 누르면 종료됩니다.", Toast.LENGTH_SHORT).show();
+                    pressedTime = 0;
+                } else {
+                    super.onBackPressed();
+                    //finish(); // app 종료 시키기
+                }
+            }
+        } else {
+            super.onBackPressed();
+        }
     }
 
 }

@@ -7,21 +7,36 @@
     android:layout_height="match_parent"
     tools:context="com.forus.MapsActivity" >
 
-    <Button
-        android:layout_width="wrap_content"
+    <LinearLayout
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_gravity="right|top"
-        android:text="타이틀보기"
-        android:padding="10dp"
-        android:layout_marginTop="20dp"
-        android:onClick="mOnClick"
-        android:paddingRight="10dp"/>
+        android:orientation="vertical"
+        android:background="@android:color/transparent" >
 
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:id="@+id/tvText1"
-        android:text="For more info drag the button..."/>
+        <Button
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="right"
+            android:text="모든멤버보기"
+            android:id="@+id/ViewAllMember"
+            android:padding="10dp"
+            android:layout_marginTop="20dp"
+            android:onClick="mOnClick"
+            android:paddingRight="10dp"/>
+
+        <Button
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="right"
+            android:text="멤버타이틀보기"
+            android:id="@+id/ViewMemberTitle"
+            android:padding="10dp"
+            android:layout_marginTop="20dp"
+            android:onClick="mOnClick"
+            android:paddingRight="10dp"/>
+
+    </LinearLayout>
+
 
     <SlidingDrawer
         android:id="@+id/slidingDrawer"

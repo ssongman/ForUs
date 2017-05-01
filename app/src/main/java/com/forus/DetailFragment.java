@@ -60,6 +60,8 @@ public class DetailFragment extends Fragment {
     private OnFragmentInteractionListener mListener;
     private static final String TAG = "ForUs DetailFragment";
     private DatabaseReference MeetingRef;
+    private DatabaseReference MemberMeetRef;
+
     private Query queryRef;
 
     private ArrayList<MtMember> arMtMembers;
@@ -75,8 +77,11 @@ public class DetailFragment extends Fragment {
     private String AuthUid     ;
 
     private TextView tvMeetName;
-    private TextView tvMeetDateTime;
+    private TextView tvMeetLeader;
+    private TextView tvMeetCrdt;
     private TextView tvMeetDesc;
+    private TextView tvMeetMember;
+
 
     private Button btnLocaStart;
     private Button btnLocaEnd  ;
@@ -133,8 +138,10 @@ public class DetailFragment extends Fragment {
         MeetingRef = FirebaseDatabase.getInstance().getReference().child("Meeting");
 
         tvMeetName = (TextView) v.findViewById(R.id.tvMeetName   );
-        tvMeetDateTime = (TextView) v.findViewById(R.id.tvMeetDateTime   );
+        tvMeetLeader = (TextView) v.findViewById(R.id.tvMeetLeader   );
+        tvMeetCrdt = (TextView) v.findViewById(R.id.tvMeetCrdt   );
         tvMeetDesc = (TextView) v.findViewById(R.id.tvMeetDesc   );
+        tvMeetMember = (TextView) v.findViewById(R.id.tvMeetMember   );
 
         btnLocaStart = (Button) v.findViewById(R.id.btnLocaStart);
         btnLocaEnd   = (Button) v.findViewById(R.id.btnLocaEnd  );
@@ -185,6 +192,8 @@ public class DetailFragment extends Fragment {
                         @Override
                         public void onClick(DialogInterface dialogInterface, int i) {
                             MeetingRef.child(MeetingKey).child("MtMembers").child(AuthUid).child("PartYN").setValue( "N" );
+                            MemberMeetRef = FirebaseDatabase.getInstance().getReference().child("Members").child(AuthUid).child("MemberMeet");
+                            MemberMeetRef.child(MeetingKey).removeValue();
                             getActivity().getSupportFragmentManager().popBackStack();
                         }
                     })
@@ -192,6 +201,7 @@ public class DetailFragment extends Fragment {
                     .show();
             }
         });
+        // 카카오공유
         btnNotify.setOnClickListener( new Button.OnClickListener() {
             public void onClick(View v) {
                 // Log.d(TAG,"btnNotify");
@@ -209,9 +219,11 @@ public class DetailFragment extends Fragment {
             public void onDataChange(DataSnapshot snapshot) {
                 //Getting the data from snapshot
                 meeting = snapshot.getValue(Meeting.class);
-                tvMeetName.setText(meeting.getMtName());
-                tvMeetDateTime.setText(meeting.getMtFrdt() + " " + meeting.getMtFrtm());
-                tvMeetDesc.setText(meeting.getMtDesc());
+                if (meeting.getMtName()   != null ) tvMeetName.setText(meeting.getMtName());
+                if (meeting.getMtLeader() != null ) tvMeetLeader.setText("모임장 : " + meeting.getMtLeader());
+                if (meeting.getMtCrdt()   != null ) tvMeetCrdt.setText(meeting.getMtCrdt());
+                if (meeting.getMtDesc()   != null ) tvMeetDesc.setText(meeting.getMtDesc());
+                tvMeetMember.setText("모임멤버 : " + meeting.getMtMembersCnt() + "명");
             }
 
             @Override
@@ -233,6 +245,7 @@ public class DetailFragment extends Fragment {
         queryRef.addListenerForSingleValueEvent(new ValueEventListener() {    // addValueEventListener,  addListenerForSingleValueEvent
             @Override
             public void onDataChange(DataSnapshot snapshot) {
+                MeetingRef.child(MeetingKey).child("MtMembersCnt").setValue( snapshot.getChildrenCount() );  // 참여인원
                 arMtMembers.clear();
                 arMtMemberKeys.clear();
                 for (DataSnapshot postSnapshot : snapshot.getChildren()) {
@@ -284,7 +297,7 @@ public class DetailFragment extends Fragment {
             final KakaoLink kakaoLink = KakaoLink.getKakaoLink(getActivity()) ;
             final KakaoTalkLinkMessageBuilder kakaoBuilder = kakaoLink.createKakaoTalkLinkMessageBuilder();
 
-            kakaoBuilder.addText("ForUs Link");
+            kakaoBuilder.addText("ForUs: " + meeting.getMtName().toString());
             String url = "https://lh4.googleusercontent.com/-6AAwrT0qFEM/AAAAAAAAAAI/AAAAAAAAAMQ/LG3Sb6MbquE/s96-c/photo.jpg";
             kakaoBuilder.addImage(url, 400, 400);
 

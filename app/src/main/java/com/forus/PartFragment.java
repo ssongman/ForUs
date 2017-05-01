@@ -64,8 +64,8 @@ public class PartFragment extends Fragment  {
     String MeetingKey;
 
     TextView tvMeetName;
-    TextView tvMeetDate;
-    TextView tvMeetTime;
+    TextView tvMeetCrdt;
+    TextView tvMeetLeader;
     TextView tvMeetDesc;
     EditText etMeetPass;
 
@@ -134,13 +134,12 @@ public class PartFragment extends Fragment  {
         MembersRef = FirebaseDatabase.getInstance().getReference().child("Members");
 
         tvMeetName    = (TextView) v.findViewById(R.id.tvMeetName   );
-        tvMeetDate    = (TextView) v.findViewById(R.id.tvMeetDate   );
-        tvMeetTime    = (TextView) v.findViewById(R.id.tvMeetTime   );
+        tvMeetCrdt    = (TextView) v.findViewById(R.id.tvMeetCrdt   );
+        tvMeetLeader  = (TextView) v.findViewById(R.id.tvMeetLeader );
         tvMeetDesc    = (TextView) v.findViewById(R.id.tvMeetDesc   );
         etMeetPass    = (EditText) v.findViewById(R.id.etMeetPass   );
 
         Button btnParticipation = (Button) v.findViewById(R.id.btnParticipation);
-        Button btnCancel       = (Button) v.findViewById(R.id.btnCancel  );
         // 모임 참여하기
         btnParticipation.setOnClickListener( new Button.OnClickListener() {
             public void onClick(View v) {
@@ -148,22 +147,35 @@ public class PartFragment extends Fragment  {
                 String MtPass = meeting.getMtPass().toString();
                 Log.d(TAG,"Pass compare MeetPass["+MeetPass+"], MtPass["+MtPass+"]");
 
-                if ( MeetPass.equals(MtPass) ) {
+                if ( MeetPass.equals(MtPass) ) {  // 패스워드 일치하면...
 
-                    // 1. NickName
+                    // 1. 모임에 멤버정보 기록
                     MeetingRef.child(MeetingKey).child("MtMembers").child(AuthUid).child("NickName").setValue( member.getNickName() );   // NickName
+                    MeetingRef.child(MeetingKey).child("MtMembers").child(AuthUid).child("PartYN").setValue( "Y" );                      // PartYN
 
-                    // 2. PartYN
-                    MeetingRef.child(MeetingKey).child("MtMembers").child(AuthUid).child("PartYN").setValue( "Y" );
-
-                    // 3. 참여수락 일자
                     SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
                     String today = sdf.format(new Date());
-                    MeetingRef.child(MeetingKey).child("MtMembers").child(AuthUid).child("ParticipationDate").setValue( today );
-
-                    // 4. 사진URL
-                    MeetingRef.child(MeetingKey).child("MtMembers").child(AuthUid).child("AuthPhotoURL").setValue( member.getAuthPhotoURL() );
+                    MeetingRef.child(MeetingKey).child("MtMembers").child(AuthUid).child("ParticipationDate").setValue( today );         //참여수락 일자
+                    MeetingRef.child(MeetingKey).child("MtMembers").child(AuthUid).child("AuthPhotoURL").setValue( member.getAuthPhotoURL() );  // 사진URL
                     // "https://lh4.googleusercontent.com/-6AAwrT0qFEM/AAAAAAAAAAI/AAAAAAAAAMQ/LG3Sb6MbquE/s96-c/photo.jpg"
+
+                    // 모임에 멤버참여 인원 구하기
+                    queryRef = MeetingRef.child(MeetingKey).child("MtMembers").orderByChild("PartYN").equalTo("Y");
+                    queryRef.addListenerForSingleValueEvent(new ValueEventListener() {    // addValueEventListener,  addListenerForSingleValueEvent
+                        @Override
+                        public void onDataChange(DataSnapshot snapshot) {
+                            MeetingRef.child(MeetingKey).child("MtMembersCnt").setValue( snapshot.getChildrenCount() );  // 참여인원
+                        }
+
+                        @Override
+                        public void onCancelled(DatabaseError databaseError) {
+                            Log.w(TAG, "Failed to read value.", databaseError.toException());
+                        }
+                    });
+
+                    // 2. 멤버당모임 기록
+                    MembersRef.child(AuthUid).child("MemberMeet").child(MeetingKey).child("MtName").setValue( meeting.getMtName()     );    // 모임명
+                    MembersRef.child(AuthUid).child("MemberMeet").child(MeetingKey).child("MtLeader").setValue( meeting.getMtLeader() );    // 모임장
 
                     Toast.makeText(getActivity(), "모임에 참여하였습니다.", Toast.LENGTH_SHORT).show();
                 } else {
@@ -172,23 +184,25 @@ public class PartFragment extends Fragment  {
                 getActivity().getSupportFragmentManager().popBackStack();
             }
         });
-        btnCancel.setOnClickListener( new Button.OnClickListener() {
-            public void onClick(View v) {
-                Log.d(TAG,"btnCancel");
-                getActivity().getSupportFragmentManager().popBackStack();
-            }
-        });
 
         // 모임정보 가져오기
         queryRef = MeetingRef.child(MeetingKey);    // key
-        queryRef.addValueEventListener(new ValueEventListener() {
+        queryRef.addListenerForSingleValueEvent(new ValueEventListener() {    // addValueEventListener ,  addListenerForSingleValueEvent
             @Override
             public void onDataChange(DataSnapshot snapshot) {
                 //Getting the data from snapshot
                 meeting = snapshot.getValue(Meeting.class);
                 tvMeetName.setText(meeting.getMtName());
-                tvMeetDate.setText(meeting.getMtFrdt());
-                tvMeetTime.setText(meeting.getMtFrtm());
+                if (meeting.getMtLeader() != null) {
+                    tvMeetLeader.setText(meeting.getMtLeader());
+                } else {
+                    tvMeetLeader.setText("");
+                }
+                if (meeting.getMtCrdt() != null) {
+                    tvMeetCrdt.setText(meeting.getMtCrdt());
+                } else {
+                    tvMeetCrdt.setText("");
+                }
                 tvMeetDesc.setText(meeting.getMtDesc());
             }
 

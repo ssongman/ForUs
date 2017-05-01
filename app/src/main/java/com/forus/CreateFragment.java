@@ -48,14 +48,15 @@ public class CreateFragment extends Fragment {
 
     private EditText etMtName;
     private EditText etMtPass;
-    private EditText etMtFrdt;
-    private EditText etMtFrtm;
     private EditText etMtDesc;
 
     // Class declear
     private Member my_member  ;
     private String AuthUid;
     private String AuthNickName;
+
+    private SimpleDateFormat sdf;
+    private String today;
     
 
     public CreateFragment() {
@@ -103,16 +104,13 @@ public class CreateFragment extends Fragment {
 
         etMtName = (EditText) v.findViewById(R.id.etMtName);
         etMtPass = (EditText) v.findViewById(R.id.etMtPass);
-        etMtFrdt = (EditText) v.findViewById(R.id.etMtFrdt);
-        etMtFrtm = (EditText) v.findViewById(R.id.etMtFrtm);
         etMtDesc = (EditText) v.findViewById(R.id.etMtDesc);
         
         Button btnCreate = (Button) v.findViewById(R.id.btnCreate);
-        Button btnCancel = (Button) v.findViewById(R.id.btnCancel);
         btnCreate.setOnClickListener( new Button.OnClickListener() {
             public void onClick(View v) {
 
-                Log.d(TAG,"Before DB insert ");
+                //Log.d(TAG,"Before DB insert ");
 
                 // 모임정보 등록
                 Map<String, Object> map = new HashMap<String, Object>();
@@ -123,27 +121,23 @@ public class CreateFragment extends Fragment {
                 meetingRefKey = meetingRef.child(temp_key);
                 map2.put("MtName",etMtName.getText().toString());
                 map2.put("MtPass",etMtPass.getText().toString());
-                map2.put("MtFrdt",etMtFrdt.getText().toString());
-                map2.put("MtFrtm",etMtFrtm.getText().toString());
+
+                sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+                today = sdf.format(new Date());
+                map2.put("MtCrdt", today);                   // 모임생성일자
                 map2.put("MtDesc",etMtDesc.getText().toString());
                 map2.put("MtLeader",AuthNickName);
+                map2.put("MtMembersCnt", 0);
                 meetingRefKey.updateChildren(map2);
 
                 // 참여멤버, 모임장은 자동참여
                 meetingRefKey.child("MtMembers").child(AuthUid).child("NickName").setValue( AuthNickName );   // 1. NickName
                 meetingRefKey.child("MtMembers").child(AuthUid).child("PartYN").setValue( "Y" );              // 2. PartYN
-                SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-                String today = sdf.format(new Date());
+                today = sdf.format(new Date());
                 meetingRefKey.child("MtMembers").child(AuthUid).child("ParticipationDate").setValue( today ); // 3. 참여수락 일자
-                meetingRefKey.child("MtMembers").child(AuthUid).child("ParticipationDate").setValue( my_member.getAuthPhotoURL() ); // 4. PhotoURL
+                meetingRefKey.child("MtMembers").child(AuthUid).child("AuthPhotoURL").setValue( my_member.getAuthPhotoURL() ); // 4. PhotoURL
 
                 Log.d(TAG,"After DB insert ");
-                getActivity().getSupportFragmentManager().popBackStack();
-            }
-        });
-        btnCancel.setOnClickListener( new Button.OnClickListener() {
-            public void onClick(View v) {
-                Log.d(TAG,"Before Test1 ");
                 getActivity().getSupportFragmentManager().popBackStack();
             }
         });
@@ -155,9 +149,7 @@ public class CreateFragment extends Fragment {
     public void onActivityCreated(Bundle savedInstanceState) {
         // TODO Auto-generated method stub
         super.onActivityCreated(savedInstanceState);
-
         //AlertMessage("Alert test");
-
     }
 
     // TODO: Rename method, update argument and hook method into UI event
